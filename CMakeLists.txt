@@ -33,9 +33,9 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
-# Add your source files
 add_executable(3DRenderer
         src/main.cpp
+        src/Window.cpp
 )
 
 # Include directories
