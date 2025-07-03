@@ -42,7 +42,7 @@ add_executable(3DRenderer
         src/Shader.cpp
         src/Mesh.cpp
         src/Scene.cpp
-        src/Render.cpp
+        src/Renderer.cpp
         src/Cube.cpp
 )
 
@@ -58,6 +58,7 @@ target_link_libraries(3DRenderer
         glfw
         glad
         glm
+        stb_image
         ${OPENGL_gl_LIBRARY}
 )
 

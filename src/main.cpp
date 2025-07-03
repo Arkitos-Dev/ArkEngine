@@ -8,7 +8,7 @@
 #include "../inlcude/Shader.hpp"
 #include "../inlcude/Mesh.hpp"
 #include "../inlcude/Scene.hpp"
-#include "../inlcude/Render.hpp"
+#include "../inlcude/Renderer.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -23,9 +23,14 @@ int main() {
 
     Scene scene;
     scene.addMesh(new Cube());
+    scene.addMesh(new Cube());
 
-    Render renderer(window, scene, shader);
-    renderer.run();
+    scene.getMeshes()[0]->setPosition(glm::vec3(0.5f, 0.5f, 0.0f));
+    scene.getMeshes()[1]->setPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
+
+
+    Renderer renderer(window, scene, shader);
+    renderer.render();
 
     return 0;
 }
