@@ -2,7 +2,7 @@
 // Created by Anton on 01.07.2025.
 //
 #pragma once
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 #include <iostream>
 
 class Window {

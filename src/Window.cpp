@@ -2,7 +2,7 @@
 // Created by Anton on 01.07.2025.
 //
 #include <glad/glad.h>
-#include "Window.hpp"
+#include "../inlcude/Window.hpp"
 #include <iostream>
 
 Window::Window(int width, int height, const char* title) {

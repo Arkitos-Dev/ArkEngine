@@ -36,6 +36,10 @@ FetchContent_MakeAvailable(stb)
 add_executable(3DRenderer
         src/main.cpp
         src/Window.cpp
+        src/Shader.cpp
+        src/Mesh.cpp
+        src/Scene.cpp
+        src/Render.cpp
 )
 
 # Include directories
