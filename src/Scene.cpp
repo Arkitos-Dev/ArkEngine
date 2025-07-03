@@ -4,6 +4,12 @@
 
 #include "../inlcude/Scene.hpp"
 
+Scene::~Scene() = default;
+
 void Scene::addMesh(Mesh* mesh) {
     meshes.push_back(mesh);
+}
+
+const std::vector<Mesh*>& Scene::getMeshes() const {
+    return meshes;
 }

@@ -40,6 +40,7 @@ add_executable(3DRenderer
         src/Mesh.cpp
         src/Scene.cpp
         src/Render.cpp
+        src/Cube.cpp
 )
 
 # Include directories

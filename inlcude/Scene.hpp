@@ -10,9 +10,10 @@
 
 class Scene {
 public:
+    Scene() = default;
+    ~Scene();
     void addMesh(Mesh* mesh);
     const std::vector<Mesh*>& getMeshes() const;
-    ~Scene();
 private:
     std::vector<Mesh*> meshes;
 };

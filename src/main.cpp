@@ -10,9 +10,7 @@
 #include "../inlcude/Scene.hpp"
 #include "../inlcude/Render.hpp"
 
-//For resizing the viewport when the window size changes
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
@@ -23,7 +21,9 @@ int main() {
     glfwSetFramebufferSizeCallback(window.getGLFWwindow(), framebuffer_size_callback);
 
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
+
     Scene scene;
+    scene.addMesh(new Cube());
 
     Render renderer(window, scene, shader);
     renderer.run();

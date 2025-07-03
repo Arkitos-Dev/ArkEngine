@@ -8,6 +8,7 @@
 #include "Window.hpp"
 #include "Shader.hpp"
 #include "Scene.hpp"
+#include "Cube.hpp"
 
 class Render {
 public:
