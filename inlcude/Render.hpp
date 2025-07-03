@@ -15,6 +15,10 @@ public:
     Render(Window& window, Scene& scene, Shader& shader);
     void run();
 private:
+    double lastTime = 0.0;
+    int nbFrames = 0;
+    void updateFPS();
+    void limitFrameRate(double frameStart, double targetFPS);
     Window& window;
     Scene& scene;
     Shader& shader;

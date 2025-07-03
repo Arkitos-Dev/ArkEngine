@@ -18,6 +18,9 @@ FetchContent_MakeAvailable(glfw)
 add_library(glad STATIC external/glad/src/glad.c)
 target_include_directories(glad PUBLIC external/glad/include)
 
+add_library(stb_image STATIC external/image/src/stb_image.cpp)
+target_include_directories(stb_image PUBLIC external/image/include/stb_image.h)
+
 # Fetch GLM
 FetchContent_Declare(
         glm

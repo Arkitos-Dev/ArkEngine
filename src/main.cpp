@@ -17,7 +17,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 int main() {
 
     Window window(1280, 720, "3D Renderer");
-
     glfwSetFramebufferSizeCallback(window.getGLFWwindow(), framebuffer_size_callback);
 
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
