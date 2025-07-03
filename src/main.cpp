@@ -26,7 +26,7 @@ int main() {
     Scene scene;
 
     Render renderer(window, scene, shader);
-    renderer.run()
+    renderer.run();
 
     return 0;
 }
