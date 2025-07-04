@@ -64,6 +64,7 @@ add_executable(3DRenderer
         src/UI.cpp
         src/Level.cpp
         src/ResourceManager.cpp
+        src/ArkEngine.cpp
 )
 
 # Include directories
