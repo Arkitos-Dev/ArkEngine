@@ -1,7 +1,7 @@
 //
 // Created by Anton on 03.07.2025.
 //
-#include "../inlcude/Mesh.hpp"
+#include "../include/Mesh.hpp"
 #include <glad/glad.h>
 #include <stb_image.h>
 

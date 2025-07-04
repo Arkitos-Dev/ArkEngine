@@ -2,7 +2,7 @@
 // Created by Anton on 03.07.2025.
 //
 
-#include "../inlcude/Scene.hpp"
+#include "../include/Scene.hpp"
 
 Scene::~Scene() = default;
 

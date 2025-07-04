@@ -1,35 +1,61 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
+#include <glm/glm.hpp>
 #include <cmath>
 
-#include "../inlcude/Window.hpp"
-#include "../inlcude/Shader.hpp"
-#include "../inlcude/Mesh.hpp"
-#include "../inlcude/Scene.hpp"
-#include "../inlcude/Renderer.hpp"
+#include "../include/Window.hpp"
+#include "../include/Shader.hpp"
+#include "../include/Mesh.hpp"
+#include "../include/Scene.hpp"
+#include "../include/Renderer.hpp"
+#include "../include/Cube.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-int main() {
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    auto* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+    if (camera)
+        camera->mouse_callback(window, xpos, ypos);
+}
 
+int main() {
     Window window(1280, 720, "3D Renderer");
     glfwSetFramebufferSizeCallback(window.getGLFWwindow(), framebuffer_size_callback);
+
+    Camera camera(window.getGLFWwindow(), true);
+
+    glfwSetWindowUserPointer(window.getGLFWwindow(), &camera);
+    glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
 
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
 
     Scene scene;
-    scene.addMesh(new Cube());
-    scene.addMesh(new Cube());
 
-    scene.getMeshes()[0]->setPosition(glm::vec3(0.5f, 0.5f, 0.0f));
-    scene.getMeshes()[1]->setPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
+    glm::vec3 cubePositions[] = {
+            { 0.0f,  0.0f,  0.0f},
+            { 2.0f,  5.0f, -15.0f},
+            {-1.5f, -2.2f, -2.5f},
+            {-3.8f, -2.0f, -12.3f},
+            { 2.4f, -0.4f, -3.5f},
+            {-1.7f,  3.0f, -7.5f},
+            { 1.3f, -2.0f, -2.5f},
+            { 1.5f,  2.0f, -2.5f},
+            { 1.5f,  0.2f, -1.5f},
+            {-1.3f,  1.0f, -1.5f}
+    };
 
+    for (int i = 0; i < 10; i++) {
+        auto* cube = new Cube();
+        cube->setPosition(cubePositions[i]);
+        float angle = 20.0f * i;
+        cube->setRotation(angle, glm::vec3(1.0f, 0.3f, 0.5f));
+        scene.addMesh(cube);
+    }
 
-    Renderer renderer(window, scene, shader);
+    Renderer renderer(window, scene, shader, camera);
     renderer.render();
 
     return 0;
