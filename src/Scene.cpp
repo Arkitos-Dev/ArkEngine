@@ -1,10 +1,11 @@
-//
-// Created by Anton on 03.07.2025.
-//
-
 #include "../include/Scene.hpp"
+#include "../include/Plane.hpp"
+#include "../include/Cube.hpp"
 
-Scene::~Scene() = default;
+Scene::~Scene() {
+    for (auto* mesh : meshes)
+        delete mesh;
+}
 
 void Scene::addMesh(Mesh* mesh) {
     meshes.push_back(mesh);
@@ -12,4 +13,26 @@ void Scene::addMesh(Mesh* mesh) {
 
 const std::vector<Mesh*>& Scene::getMeshes() const {
     return meshes;
+}
+
+void Scene::loadLevel(const Level& level) {
+    // Vorherige Meshes löschen
+    for (auto* mesh : meshes)
+        delete mesh;
+    meshes.clear();
+
+    for (const auto& obj : level.getObjects()) {
+        Mesh* mesh = nullptr;
+        if (obj.type == LevelObject::Cube) {
+            mesh = new Cube();
+        } else if (obj.type == LevelObject::Plane) {
+            mesh = new Plane();
+        }
+        if (mesh) {
+            mesh->setPosition(obj.position);
+            mesh->setRotation(obj.rotationAngle, obj.rotationAxis);
+            mesh->setScale(obj.scale);
+            addMesh(mesh);
+        }
+    }
 }

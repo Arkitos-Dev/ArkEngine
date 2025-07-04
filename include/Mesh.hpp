@@ -21,6 +21,10 @@ public:
 
     void setInstanceModelMatrices(const std::vector<glm::mat4>& matrices);
     size_t getInstanceCount() const { return instanceCount; }
+
+    void setPrototype(Mesh* proto) { prototype = proto; }
+    Mesh* getPrototype() const { return prototype ? prototype : const_cast<Mesh*>(this); }
+
     void drawInstanced() const;
 
     glm::mat4 getModelMatrix() const { return model; }
@@ -33,16 +37,15 @@ private:
     glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
 
-    unsigned int instanceVBO = 0;
-    size_t instanceCount = 0;
+    Mesh* prototype = nullptr;
 
     void updateModelMatrix() {
         model = glm::translate(glm::mat4(1.0f), position)
                 * glm::mat4_cast(rotation)
                 * glm::scale(glm::mat4(1.0f), scale);
     }
-    unsigned int VAO, VBO, EBO, texture1, texture2;
-    size_t indexCount;
+    unsigned int VAO, VBO, EBO, texture1, texture2, instanceVBO = 0;
+    size_t indexCount, instanceCount = 0;
 };
 
 #endif //INC_3DRENDERER_MESH_HPP

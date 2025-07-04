@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "Mesh.hpp"
+#include "Level.hpp"
 
 class Scene {
 public:
@@ -14,6 +15,7 @@ public:
     ~Scene();
     void addMesh(Mesh* mesh);
     const std::vector<Mesh*>& getMeshes() const;
+    void loadLevel(const Level& level);
 private:
     std::vector<Mesh*> meshes;
 };

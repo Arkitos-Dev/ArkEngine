@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
 #include <thread>
+#include <map>
 
 Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam)
         : window(win), scene(sc), shader(sh), camera(cam) {
@@ -84,18 +85,18 @@ void Renderer::render() {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        std::vector<glm::mat4> instanceMatrices;
-        for (const auto& mesh : scene.getMeshes()) {
-            instanceMatrices.push_back(mesh->getModelMatrix());
+        std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
+        for (auto* mesh : scene.getMeshes()) {
+            meshGroups[mesh->getPrototype()].push_back(mesh->getModelMatrix());
         }
 
-        if (!scene.getMeshes().empty()) {
-            auto* mesh = scene.getMeshes().front();
-            mesh->setInstanceModelMatrices(instanceMatrices);
-
-            mesh->bind();
-            mesh->drawInstanced();
-            mesh->unbind();
+        for (auto& [prototype, matrices] : meshGroups) {
+            if (!matrices.empty()) {
+                prototype->setInstanceModelMatrices(matrices);
+                prototype->bind();
+                prototype->drawInstanced();
+                prototype->unbind();
+            }
         }
 
         window.swapBuffers();

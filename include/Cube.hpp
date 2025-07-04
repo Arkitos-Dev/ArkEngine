@@ -9,8 +9,7 @@
 
 class Cube : public Mesh {
 public:
-    Cube(float size = 1.0f,
-         const char* texturePath = "resources/images/container.jpg")
+    Cube(const char* texturePath = "resources/images/container.jpg")
             : Mesh(vertices, sizeof(vertices), indices, sizeof(indices), texturePath) {}
 private:
     static constexpr float vertices[] = {

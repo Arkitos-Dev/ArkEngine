@@ -9,7 +9,7 @@
 
 class Plane : public Mesh {
 public:
-    Plane(float size = 1.0f, const char* texturePath = nullptr)
+    Plane(const char* texturePath = "resources/images/container.jpg")
             : Mesh(vertices, sizeof(vertices), indices, sizeof(indices), texturePath) {}
 
 private:
