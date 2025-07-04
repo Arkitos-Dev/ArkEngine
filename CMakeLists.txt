@@ -36,6 +36,22 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
+set(IMGUI_SOURCES
+        external/imgui/imgui.cpp
+        external/imgui/imgui_draw.cpp
+        external/imgui/imgui_widgets.cpp
+        external/imgui/imgui_tables.cpp
+        external/imgui/backends/imgui_impl_glfw.cpp
+        external/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_include_directories(imgui PUBLIC
+        external/imgui
+        external/imgui/backends
+        ${glfw_SOURCE_DIR}/include
+)
+
 add_executable(3DRenderer
         src/main.cpp
         src/Window.cpp
@@ -59,6 +75,7 @@ target_link_libraries(3DRenderer
         glm
         stb_image
         ${OPENGL_gl_LIBRARY}
+        imgui
 )
 
 # On some systems, you may need to link OpenGL manually
