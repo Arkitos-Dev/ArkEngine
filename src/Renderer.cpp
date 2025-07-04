@@ -10,7 +10,7 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam, Level& lvl)
+Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, Level& lvl)
         : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()), level(lvl) {
     camera.paused = &paused;
     setUpShaderTextures();
@@ -69,9 +69,9 @@ void Renderer::limitFrameRate(double frameStart, double targetFPS) {
 }
 
 void Renderer::setUpShaderTextures() {
-    shader.use();
-    shader.setInt("texture1", 0);
-    shader.setInt("texture2", 1);
+    shader->use();
+    shader->setInt("texture1", 0);
+    shader->setInt("texture2", 1);
 }
 
 // Renderer.cpp
@@ -129,8 +129,8 @@ void Renderer::render() {
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", camera.getViewMatrix());
+        shader->setMat4("projection", projection);
+        shader->setMat4("view", camera.getViewMatrix());
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

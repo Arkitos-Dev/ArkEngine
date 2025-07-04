@@ -63,6 +63,7 @@ add_executable(3DRenderer
         src/Camera.cpp
         src/UI.cpp
         src/Level.cpp
+        src/ResourceManager.cpp
 )
 
 # Include directories
