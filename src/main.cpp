@@ -10,6 +10,8 @@
 #include "../include/Scene.hpp"
 #include "../include/Renderer.hpp"
 #include "../include/Cube.hpp"
+#include "../include/plane.hpp"
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -54,6 +56,10 @@ int main() {
         cube->setRotation(angle, glm::vec3(1.0f, 0.3f, 0.5f));
         scene.addMesh(cube);
     }
+
+    auto* plane1 = new Plane(5.0f, "resources/images/container.jpg");
+    plane1->setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+    scene.addMesh(plane1);
 
     Renderer renderer(window, scene, shader, camera);
     renderer.render();

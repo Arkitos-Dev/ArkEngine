@@ -14,13 +14,25 @@ private:
     glm::vec3 cameraDirection = glm::normalize(position - cameraTarget);
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
     glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-    bool firstMouse;
+    bool firstMouse = true;
     float lastX, lastY, yaw, pitch;
 
 public:
     Camera(GLFWwindow* window, bool hideCursor = true) {
         if (hideCursor)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+        // In Camera-Konstruktor nach Position setzen:
+        position = glm::vec3(0.0f, 0.0f, 3.0f);
+        glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
+        front = glm::normalize(target - position);
+
+// Yaw und Pitch passend initialisieren:
+        yaw = -90.0f; // für Blick entlang -Z, ggf. anpassen
+        pitch = 0.0f;
+
+// View-Matrix aktualisieren:
+        updateViewMatrix();
     }
 
     glm::vec3 position = {0.0f, 0.0f, 3.0f};
@@ -31,6 +43,7 @@ public:
     void updateViewMatrix() {
         view = glm::lookAt(position, position + front, up);
     }
+
     glm::mat4 getViewMatrix() const {return view;}
 
     void Movement(GLFWwindow* window, float deltaTime) {

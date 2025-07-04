@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include <thread>
 
@@ -61,15 +60,14 @@ void Renderer::render() {
         updateFPS();
         Input();
 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         int width, height;
         glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
         float aspect = static_cast<float>(width) / static_cast<float>(height);
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 
-        glm::vec3 color = {1.0f, 0.5f, 0.0f};
-
-        shader.setVec3("uniColor", color);
         shader.setMat4("projection", projection);
         shader.setMat4("view", camera.getViewMatrix());
 
@@ -84,8 +82,6 @@ void Renderer::render() {
 
         window.swapBuffers();
         window.pollEvents();
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         limitFrameRate(frameStart, 120);
     }
