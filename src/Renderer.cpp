@@ -9,8 +9,8 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam)
-        : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()) {
+Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam, const Level& lvl)
+        : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()), level(lvl) {
     camera.paused = &paused;
     setUpShaderTextures();
     glEnable(GL_DEPTH_TEST);
@@ -109,7 +109,7 @@ void Renderer::render() {
                 prototype->unbind();
             }
         }
-        ui.draw(scene.getMeshes());
+        ui.draw(scene.getMeshes(), level);
 
         ui.endFrame();
         window.swapBuffers();

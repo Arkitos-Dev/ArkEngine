@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include "Mesh.hpp"
+#include "Level.hpp"
+#include <map>
 
 class UI {
 public:
@@ -13,7 +15,9 @@ public:
 
     void beginFrame();
     void endFrame();
-    void draw(const std::vector<Mesh*>& meshes);
+    void draw(const std::vector<Mesh*>& meshes, const Level& level);
+
+    static const char* typeToString(LevelObject::Type type);
 private:
     // ggf. Membervariablen, falls benötigt
 };

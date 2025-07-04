@@ -1,30 +1,13 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "../include/Window.hpp"
 #include "../include/Shader.hpp"
 #include "../include/Mesh.hpp"
 #include "../include/Scene.hpp"
 #include "../include/Renderer.hpp"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    auto* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
-    if (camera)
-        camera->mouse_callback(window, xpos, ypos);
-}
-
 int main() {
     Window window(1280, 720, "3D Renderer");
-    glfwSetFramebufferSizeCallback(window.getGLFWwindow(), framebuffer_size_callback);
 
     Camera camera(window.getGLFWwindow(), true);
-
-    glfwSetWindowUserPointer(window.getGLFWwindow(), &camera);
-    glfwSetCursorPosCallback(window.getGLFWwindow(), mouse_callback);
 
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
 
@@ -64,7 +47,7 @@ int main() {
     Scene scene;
     scene.loadLevel(level);
 
-    Renderer renderer(window, scene, shader, camera);
+    Renderer renderer(window, scene, shader, camera, level);
     renderer.render();
 
     return 0;

@@ -14,7 +14,7 @@
 
 class Renderer {
 public:
-    Renderer(Window& window, Scene& scene, Shader& shader, Camera& cam);
+    Renderer(Window& window, Scene& scene, Shader& shader, Camera& cam, const Level& lvl);
     void render();
 private:
     double lastTime = 0.0;
@@ -36,6 +36,7 @@ private:
     Shader& shader;
     Camera& camera;
     UI ui;
+    const Level& level;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

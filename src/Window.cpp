@@ -23,6 +23,8 @@ Window::Window(int width, int height, const char* title) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         exit(-1);
     }
+
+    glfwSetFramebufferSizeCallback(window, Window::framebuffer_size_callback);
 }
 
 Window::~Window() {
@@ -43,4 +45,8 @@ void Window::pollEvents() {
 
 GLFWwindow* Window::getGLFWwindow() const {
     return window;
+}
+
+void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
 }

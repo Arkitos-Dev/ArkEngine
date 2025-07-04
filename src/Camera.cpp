@@ -7,6 +7,9 @@ Camera::Camera(GLFWwindow* window, bool hideCursor) {
     if (hideCursor)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, Camera::mouse_callback_dispatch);
+
     position = glm::vec3(0.0f, 0.0f, 3.0f);
     glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
     front = glm::normalize(target - position);
@@ -80,4 +83,11 @@ void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     front = glm::normalize(direction);
 
     updateViewMatrix();
+}
+
+// In src/Camera.cpp
+void Camera::mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos) {
+    auto* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+    if (camera)
+        camera->mouse_callback(window, xpos, ypos);
 }

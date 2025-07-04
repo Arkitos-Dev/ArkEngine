@@ -23,5 +23,6 @@ public:
     void updateViewMatrix();
     glm::mat4 getViewMatrix() const;
     void Movement(GLFWwindow* window, float deltaTime);
+    static void mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos);
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 };

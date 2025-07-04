@@ -14,6 +14,8 @@ public:
     void swapBuffers();
     void pollEvents();
 
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
     GLFWwindow* getGLFWwindow() const;
 
 private:
