@@ -1,15 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <cmath>
 
 #include "../include/Window.hpp"
 #include "../include/Shader.hpp"
 #include "../include/Mesh.hpp"
 #include "../include/Scene.hpp"
 #include "../include/Renderer.hpp"
-#include "../include/plane.hpp"
-#include "../include/Level.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -33,10 +29,31 @@ int main() {
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
 
     LevelObject levelObjects[] = {
-            { LevelObject::Plane, {0,0,0}, 0.0f, {0,1,0}, {10,1,10} },
-            { LevelObject::Plane, {0,0,0}, 0.0f, {0,1,0}, {0,0,0} },
-            { LevelObject::Cube,  {0,1,0}, 0.0f, {0,1,0}, {1,1,1} },
-            { LevelObject::Cube,  {2,1,2}, 45.0f, {0,1,0}, {1,2,1} }
+            { LevelObject::Plane, {0,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {1,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {-1,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {0,-0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {0,-0.5, 1}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {1,-0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {-1,-0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {0.5,0.0, 1}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {-1,0.0,1.5}, 90.0f, {1,0,0}, {1,1,1} },
+            { LevelObject::Plane, {-0.5,0.0,1}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {-1.5,0.0,2}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {-1.5,0.0,3}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {-1,0.0,3.5}, 90.0f, {1,0,0}, {1,1,1} },
+            { LevelObject::Plane, {0,0.0,3.5}, 90.0f, {1,0,0}, {1,1,1} },
+            { LevelObject::Plane, {1,0.0,3.5}, 90.0f, {1,0,0}, {1,1,1} },
+            { LevelObject::Plane, {1.5,0.0,2.0}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {1.5,0.0,3}, 90.0f, {0,0,1}, {1,1,1} },
+            { LevelObject::Plane, {1,0.0,1.5}, 90.0f, {1,0,0}, {1,1,1} },
+            { LevelObject::Plane, {0,0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {1,0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {-1,0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {0,0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {0,0.5, 1}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {1,0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
+            { LevelObject::Plane, {-1,0.5, 2}, 0.0f, {0,1,0}, {1,1,1} }
     };
 
     Level level;
@@ -45,7 +62,6 @@ int main() {
     }
 
     Scene scene;
-
     scene.loadLevel(level);
 
     Renderer renderer(window, scene, shader, camera);

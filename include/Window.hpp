@@ -13,10 +13,7 @@ public:
     bool shouldClose() const;
     void swapBuffers();
     void pollEvents();
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-    void setFramebufferSizeCallback();
-    void setCursorPosCallback(void* userPointer, void (*callback)(GLFWwindow*, double, double));
-    void setUserPointer(void* ptr);
+
     GLFWwindow* getGLFWwindow() const;
 
 private:
