@@ -10,6 +10,7 @@
 #include "Scene.hpp"
 #include "Cube.hpp"
 #include "Camera.hpp"
+#include "UI.hpp"
 
 class Renderer {
 public:
@@ -34,6 +35,7 @@ private:
     Scene& scene;
     Shader& shader;
     Camera& camera;
+    UI ui;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

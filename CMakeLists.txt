@@ -59,6 +59,8 @@ add_executable(3DRenderer
         src/Mesh.cpp
         src/Scene.cpp
         src/Renderer.cpp
+        src/Camera.cpp
+        src/UI.cpp
 )
 
 # Include directories

@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
+#include <string>
 
 class Mesh {
 public:
@@ -25,12 +26,14 @@ public:
     void setPrototype(Mesh* proto) { prototype = proto; }
     Mesh* getPrototype() const { return prototype ? prototype : const_cast<Mesh*>(this); }
 
-    void drawInstanced() const;
-
     glm::mat4 getModelMatrix() const { return model; }
     void bind() const;
     void unbind() const;
     void draw() const;
+    void drawInstanced() const;
+
+    std::string name;
+    Mesh(const std::string& name = "Mesh") : name(name) {}
 private:
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 position = glm::vec3(0.0f);

@@ -10,7 +10,8 @@
 #include <map>
 
 Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam)
-        : window(win), scene(sc), shader(sh), camera(cam) {
+        : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()) {
+    camera.paused = &paused;
     setUpShaderTextures();
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
@@ -23,15 +24,24 @@ void Renderer::Input() {
             paused = !paused;
             if (paused)
                 glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            else
+            else {
                 glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                double xpos, ypos;
+                glfwGetCursorPos(window.getGLFWwindow(), &xpos, &ypos);
+                camera.lastX = xpos;
+                camera.lastY = ypos;
+                camera.firstMouse = true; // <-- Hinzufügen!
+            }
         }
         escPressedLastFrame = true;
     } else {
         escPressedLastFrame = false;
     }
-    if (!paused)
+
+    // Bewegung und Kamera nur wenn nicht pausiert
+    if (!paused) {
         camera.Movement(window.getGLFWwindow(), deltaTime);
+    }
 }
 
 void Renderer::updateFPS() {
@@ -71,6 +81,7 @@ void Renderer::render() {
 
         updateFPS();
         Input();
+        ui.beginFrame();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -98,7 +109,9 @@ void Renderer::render() {
                 prototype->unbind();
             }
         }
+        ui.draw(scene.getMeshes());
 
+        ui.endFrame();
         window.swapBuffers();
         window.pollEvents();
 

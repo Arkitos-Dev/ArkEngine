@@ -8,6 +8,7 @@
 #include <vector>
 #include "Mesh.hpp"
 #include "Level.hpp"
+#include <string>
 
 class Scene {
 public:

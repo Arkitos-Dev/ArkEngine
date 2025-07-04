@@ -10,7 +10,7 @@
 class Cube : public Mesh {
 public:
     Cube(const char* texturePath = "resources/images/container.jpg")
-            : Mesh(vertices, sizeof(vertices), indices, sizeof(indices), texturePath) {}
+            : Mesh( vertices, sizeof(vertices), indices, sizeof(indices), texturePath) {}
 private:
     static constexpr float vertices[] = {
             // Rückseite

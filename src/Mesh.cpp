@@ -5,7 +5,7 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 
-Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize, const char* texturePath1, const char* texturePath2)
+Mesh::Mesh( const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize, const char* texturePath1, const char* texturePath2)
         : indexCount(idxSize / sizeof(unsigned int)), texture1(0), texture2(0)
 {
     glGenVertexArrays(1, &VAO);
