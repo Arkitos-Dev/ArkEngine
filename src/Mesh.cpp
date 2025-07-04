@@ -4,12 +4,35 @@
 #include "../include/Mesh.hpp"
 #include "../include/ResourceManager.hpp"
 #include <glad/glad.h>
-#include <stb_image.h>
 
-
-Mesh::Mesh( const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize, const char* texturePath1, const char* texturePath2)
+Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize, const char* texturePath1, const char* texturePath2)
         : indexCount(idxSize / sizeof(unsigned int)), texture1(0), texture2(0)
 {
+    SetupBuffers(vertices, vertSize, indices, idxSize);
+    LoadTextures(texturePath1, texturePath2);
+
+    // Instancing-Buffer anlegen (leer, wird später befüllt)
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+    // Model-Matrix als 4 Attribute (3-6) im VAO registrieren
+    glBindVertexArray(VAO);
+    for (int i = 0; i < 4; ++i) {
+        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(float) * i * 4));
+        glEnableVertexAttribArray(3 + i);
+        glVertexAttribDivisor(3 + i, 1);
+    }
+    glBindVertexArray(0);
+}
+
+Mesh::~Mesh() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
+void Mesh::SetupBuffers(const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize) {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -30,6 +53,10 @@ Mesh::Mesh( const float* vertices, size_t vertSize, const unsigned int* indices,
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glBindVertexArray(0);
+}
+
+void Mesh::LoadTextures(const char* texturePath1, const char* texturePath2) {
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -39,28 +66,6 @@ Mesh::Mesh( const float* vertices, size_t vertSize, const unsigned int* indices,
 
     if (texturePath1) texture1 = ResourceManager::GetTexture(texturePath1);
     if (texturePath2) texture2 = ResourceManager::GetTexture(texturePath2);
-
-    glBindVertexArray(VAO);
-
-    // Instancing-Buffer anlegen (leer, wird später befüllt)
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    // Model-Matrix als 4 Attribute (3-6) im VAO registrieren
-    for (int i = 0; i < 4; ++i) {
-        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(float) * i * 4));
-        glEnableVertexAttribArray(3 + i);
-        glVertexAttribDivisor(3 + i, 1);
-    }
-    glBindVertexArray(0);
-
-}
-
-Mesh::~Mesh() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
 }
 
 void Mesh::setInstanceModelMatrices(const std::vector<glm::mat4>& matrices) {

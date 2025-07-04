@@ -42,6 +42,9 @@ private:
 
     Mesh* prototype = nullptr;
 
+    void SetupBuffers(const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize);
+    void LoadTextures(const char* texturePath1, const char* texturePath2);
+
     void updateModelMatrix() {
         model = glm::translate(glm::mat4(1.0f), position)
                 * glm::mat4_cast(rotation)

@@ -4,10 +4,6 @@
 #include "../include/Level.hpp"
 #include <fstream>
 
-// src/Level.cpp
-#include "../include/Level.hpp"
-#include <fstream>
-
 void writeVec3(std::ofstream& out, const glm::vec3& v) {
     out.write(reinterpret_cast<const char*>(&v.x), sizeof(float));
     out.write(reinterpret_cast<const char*>(&v.y), sizeof(float));
