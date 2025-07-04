@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <string>
 
 struct LevelObject {
     enum Type { Cube, Plane } type;
@@ -18,6 +19,9 @@ public:
     void addObject(const LevelObject& obj) { objects.push_back(obj); }
     void clear() { objects.clear(); }
     const std::vector<LevelObject>& getObjects() const { return objects; }
+    std::vector<LevelObject>& getObjects() { return objects; }
+    void SaveLevel(const Level& level, const std::string& filename);
+    void LoadLevel(Level& level, const std::string& filename);
 private:
     std::vector<LevelObject> objects;
 };

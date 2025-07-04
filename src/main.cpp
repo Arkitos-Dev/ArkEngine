@@ -5,13 +5,13 @@
 #include "../include/Renderer.hpp"
 
 int main() {
-    Window window(1280, 720, "3D Renderer");
+    Window window(1920, 1080, "3D Renderer");
 
     Camera camera(window.getGLFWwindow(), true);
 
     Shader shader("shaders/firstVert.vert", "shaders/firstFrag.frag");
 
-    LevelObject levelObjects[] = {
+    /*LevelObject levelObjects[] = {
             { LevelObject::Plane, {0,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
             { LevelObject::Plane, {1,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
             { LevelObject::Plane, {-1,-0.5, 3}, 0.0f, {0,1,0}, {1,1,1} },
@@ -37,15 +37,18 @@ int main() {
             { LevelObject::Plane, {0,0.5, 1}, 0.0f, {0,1,0}, {1,1,1} },
             { LevelObject::Plane, {1,0.5, 2}, 0.0f, {0,1,0}, {1,1,1} },
             { LevelObject::Plane, {-1,0.5, 2}, 0.0f, {0,1,0}, {1,1,1} }
-    };
+    };*/
 
     Level level;
-    for (const auto& obj : levelObjects) {
+    level.LoadLevel(level, "level.bin");
+
+    /*for (const auto& obj : levelObjects) {
         level.addObject(obj);
-    }
+    }*/
 
     Scene scene;
     scene.loadLevel(level);
+
 
     Renderer renderer(window, scene, shader, camera, level);
     renderer.render();

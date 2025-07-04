@@ -14,7 +14,7 @@
 
 class Renderer {
 public:
-    Renderer(Window& window, Scene& scene, Shader& shader, Camera& cam, const Level& lvl);
+    Renderer(Window& window, Scene& scene, Shader& shader, Camera& cam, Level& lvl);
     void render();
 private:
     double lastTime = 0.0;
@@ -25,9 +25,15 @@ private:
     bool paused = false;
     bool escPressedLastFrame = false;
 
+    GLuint viewportFBO = 0;
+    GLuint viewportTexture = 0;
+    GLuint viewportRBO = 0;
+    int viewportWidth = 1280, viewportHeight = 720;
+
+    void createViewportFBO(int width, int height);
+    void deleteViewportFBO();
     void updateFPS();
     void limitFrameRate(double frameStart, double targetFPS);
-    void loadTextures();
     void setUpShaderTextures();
     void Input();
 
@@ -36,7 +42,7 @@ private:
     Shader& shader;
     Camera& camera;
     UI ui;
-    const Level& level;
+    Level& level;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

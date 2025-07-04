@@ -1,6 +1,7 @@
 //
 // Created by Anton on 03.07.2025.
 //
+#include <glad/glad.h>
 #include "../include/Renderer.hpp"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -9,7 +10,7 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam, const Level& lvl)
+Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam, Level& lvl)
         : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()), level(lvl) {
     camera.paused = &paused;
     setUpShaderTextures();
@@ -73,7 +74,42 @@ void Renderer::setUpShaderTextures() {
     shader.setInt("texture2", 1);
 }
 
+// Renderer.cpp
+void Renderer::createViewportFBO(int width, int height) {
+    if (viewportFBO) deleteViewportFBO();
+
+    glGenFramebuffers(1, &viewportFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, viewportFBO);
+
+    glGenTextures(1, &viewportTexture);
+    glBindTexture(GL_TEXTURE_2D, viewportTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, viewportTexture, 0);
+
+    glGenRenderbuffers(1, &viewportRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, viewportRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, viewportRBO);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "Framebuffer nicht komplett!" << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::deleteViewportFBO() {
+    if (viewportTexture) glDeleteTextures(1, &viewportTexture);
+    if (viewportRBO) glDeleteRenderbuffers(1, &viewportRBO);
+    if (viewportFBO) glDeleteFramebuffers(1, &viewportFBO);
+    viewportTexture = 0;
+    viewportRBO = 0;
+    viewportFBO = 0;
+}
+
 void Renderer::render() {
+    createViewportFBO(viewportWidth, viewportHeight);
     while (!window.shouldClose()) {
         double frameStart = glfwGetTime();
         deltaTime = frameStart - lastFrameTime;
@@ -81,8 +117,10 @@ void Renderer::render() {
 
         updateFPS();
         Input();
-        ui.beginFrame();
 
+        glBindFramebuffer(GL_FRAMEBUFFER, viewportFBO);
+        glViewport(0, 0, viewportWidth, viewportHeight);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         int width, height;
@@ -109,12 +147,18 @@ void Renderer::render() {
                 prototype->unbind();
             }
         }
-        ui.draw(scene.getMeshes(), level);
 
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        ui.beginFrame();
+        ui.drawViewport(viewportTexture, viewportWidth, viewportHeight);
+        ui.draw(scene.getMeshes(), level, scene);
         ui.endFrame();
+
         window.swapBuffers();
         window.pollEvents();
 
         //limitFrameRate(frameStart, 120);
     }
+    deleteViewportFBO();
 }

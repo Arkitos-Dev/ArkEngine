@@ -7,6 +7,7 @@
 #include "Mesh.hpp"
 #include "Level.hpp"
 #include <map>
+#include "Scene.hpp"
 
 class UI {
 public:
@@ -15,7 +16,9 @@ public:
 
     void beginFrame();
     void endFrame();
-    void draw(const std::vector<Mesh*>& meshes, const Level& level);
+    void draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene);
+    ImVec2 drawViewport(GLuint texture, int texWidth, int texHeight);
+    ImVec2 getRecommendedViewportSize(int texWidth, int texHeight);
 
     static const char* typeToString(LevelObject::Type type);
 private:
