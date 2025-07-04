@@ -21,6 +21,9 @@ private:
     double deltaTime = 0.0f;
     double lastFrameTime = 0.0f;
 
+    bool paused = false;
+    bool escPressedLastFrame = false;
+
     void updateFPS();
     void limitFrameRate(double frameStart, double targetFPS);
     void loadTextures();

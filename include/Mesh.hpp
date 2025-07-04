@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <vector>
 
 class Mesh {
 public:
@@ -18,6 +19,10 @@ public:
     void setRotation(float angleDeg, const glm::vec3& axis) { rotation = glm::angleAxis(glm::radians(angleDeg), glm::normalize(axis)); updateModelMatrix(); }
     void setScale(const glm::vec3& s) { scale = s; updateModelMatrix(); }
 
+    void setInstanceModelMatrices(const std::vector<glm::mat4>& matrices);
+    size_t getInstanceCount() const { return instanceCount; }
+    void drawInstanced() const;
+
     glm::mat4 getModelMatrix() const { return model; }
     void bind() const;
     void unbind() const;
@@ -27,6 +32,9 @@ private:
     glm::vec3 position = glm::vec3(0.0f);
     glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     glm::vec3 scale = glm::vec3(1.0f);
+
+    unsigned int instanceVBO = 0;
+    size_t instanceCount = 0;
 
     void updateModelMatrix() {
         model = glm::translate(glm::mat4(1.0f), position)

@@ -57,9 +57,16 @@ int main() {
         scene.addMesh(cube);
     }
 
-    auto* plane1 = new Plane(5.0f, "resources/images/container.jpg");
-    plane1->setPosition(glm::vec3(0.0f, -1.0f, 0.0f));
-    scene.addMesh(plane1);
+    // Erzeuge ein 3x3 Raster aus Planes als Boden
+    float planeSize = 1.0f;
+    int gridSize = 5;
+    for (int x = -gridSize; x <= gridSize; ++x) {
+        for (int z = -gridSize; z <= gridSize; ++z) {
+            auto* ground = new Plane(planeSize, "resources/images/container.jpg");
+            ground->setPosition(glm::vec3(x * planeSize, -1.0f, z * planeSize));
+            scene.addMesh(ground);
+        }
+    }
 
     Renderer renderer(window, scene, shader, camera);
     renderer.render();

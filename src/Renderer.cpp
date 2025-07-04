@@ -17,9 +17,20 @@ Renderer::Renderer(Window& win, Scene& sc, Shader& sh, Camera& cam)
 }
 
 void Renderer::Input() {
-    if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window.getGLFWwindow(), true);
-    camera.Movement(window.getGLFWwindow(), deltaTime);
+    if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (!escPressedLastFrame) {
+            paused = !paused;
+            if (paused)
+                glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            else
+                glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        escPressedLastFrame = true;
+    } else {
+        escPressedLastFrame = false;
+    }
+    if (!paused)
+        camera.Movement(window.getGLFWwindow(), deltaTime);
 }
 
 void Renderer::updateFPS() {
@@ -73,16 +84,23 @@ void Renderer::render() {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        std::vector<glm::mat4> instanceMatrices;
         for (const auto& mesh : scene.getMeshes()) {
-            shader.setMat4("model", mesh->getModelMatrix());
+            instanceMatrices.push_back(mesh->getModelMatrix());
+        }
+
+        if (!scene.getMeshes().empty()) {
+            auto* mesh = scene.getMeshes().front();
+            mesh->setInstanceModelMatrices(instanceMatrices);
+
             mesh->bind();
-            mesh->draw();
+            mesh->drawInstanced();
             mesh->unbind();
         }
 
         window.swapBuffers();
         window.pollEvents();
 
-        limitFrameRate(frameStart, 120);
+        //limitFrameRate(frameStart, 120);
     }
 }

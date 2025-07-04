@@ -28,6 +28,13 @@ Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, 
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    glGenTextures(1, &texture1);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     if (texturePath1) {
         glGenTextures(1, &texture1);
         glBindTexture(GL_TEXTURE_2D, texture1);
@@ -54,6 +61,19 @@ Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, 
         }
         stbi_image_free(data);
     }
+    glBindVertexArray(VAO);
+
+    // Instancing-Buffer anlegen (leer, wird später befüllt)
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+    // Model-Matrix als 4 Attribute (3-6) im VAO registrieren
+    for (int i = 0; i < 4; ++i) {
+        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(float) * i * 4));
+        glEnableVertexAttribArray(3 + i);
+        glVertexAttribDivisor(3 + i, 1);
+    }
     glBindVertexArray(0);
 
 }
@@ -64,6 +84,16 @@ Mesh::~Mesh() {
     glDeleteBuffers(1, &EBO);
     if (texture1) glDeleteTextures(1, &texture1);
     if (texture2) glDeleteTextures(1, &texture2);
+}
+
+void Mesh::setInstanceModelMatrices(const std::vector<glm::mat4>& matrices) {
+    instanceCount = matrices.size();
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
+}
+
+void Mesh::drawInstanced() const {
+    glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instanceCount));
 }
 
 void Mesh::bind() const {
