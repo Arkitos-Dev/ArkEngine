@@ -14,7 +14,7 @@
 
 class Renderer {
 public:
-    Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, Level& lvl, UI& ui);
+    Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, UI& ui);
     void Render();
 private:
     double lastTime = 0.0;
@@ -24,6 +24,9 @@ private:
 
     bool paused = false;
     bool escPressedLastFrame = false;
+
+    std::vector<Mesh*> cachedMeshes;
+    bool meshesDirty = true;
 
     GLuint viewportFBO = 0;
     GLuint viewportTexture = 0;
@@ -35,6 +38,7 @@ private:
     void UpdateFPS();
     void LimitFPS(double frameStart, double targetFPS);
     void SetUpShaderTextures();
+    void UpdateMeshCache();
     void Input();
 
     Window& window;
@@ -42,7 +46,6 @@ private:
     Shader* shader;
     Camera& camera;
     UI& ui;
-    Level& level;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

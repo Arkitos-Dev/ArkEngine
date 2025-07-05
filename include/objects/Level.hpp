@@ -20,8 +20,8 @@ public:
     void Clear() { objects.clear(); }
     const std::vector<LevelObject>& GetObjects() const { return objects; }
     std::vector<LevelObject>& GetObjects() { return objects; }
-    void SaveLevel(const Level& level, const std::string& filename);
-    void LoadLevel(Level& level, const std::string& filename);
+    void Save(const std::string& filename) const;
+    bool Load(const std::string& filename);
 private:
     std::vector<LevelObject> objects;
 };

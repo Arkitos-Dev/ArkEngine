@@ -17,13 +17,13 @@ void ArkEngine::Run() {
     Shader* shader = ResourceManager::GetShader("shaders/firstVert.vert", "shaders/firstFrag.frag");
 
     Level level;
-    level.LoadLevel(level, "level.bin");
+    level.Load("level.bin");
 
     Scene scene;
-    scene.SetLevel(level);
+    scene.FromLevel(level);
 
     UI ui(window.GetWindow());
 
-    Renderer renderer(window, scene, shader, camera, level, ui);
+    Renderer renderer(window, scene, shader, camera, ui);
     renderer.Render();
 }

@@ -1,5 +1,6 @@
 // C++
 #include "../../include/core/UI.hpp"
+#include "../../include/objects/Level.hpp"
 
 UI::UI(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -48,31 +49,32 @@ void UI::EndFrame() {
 
 const char* UI::TypeToString(LevelObject::Type type) {
     switch (type) {
-        case LevelObject::Cube:
-            return "Cube";
-        case LevelObject::Plane:
-            return "Plane";
-        default:
-            return "Unknown";
+        case LevelObject::Cube:  return "Cube";
+        case LevelObject::Plane: return "Plane";
+        default:                 return "Unknown";
     }
 }
 
-void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
+void UI::Draw(const std::vector<Mesh*>& meshes, Scene& scene) {
     static int selectedIndex = 0;
-    DrawMainMenu(level, scene);
-    DrawSceneList(level, scene, selectedIndex);
-    DrawObjectInfo(level, scene, selectedIndex, meshes);
+    DrawMainMenu(scene);
+    DrawSceneList(scene, selectedIndex);
+    DrawObjectInfo(scene, selectedIndex, meshes);
 }
 
-void UI::DrawMainMenu(Level& level, Scene& scene) {
+void UI::DrawMainMenu(Scene& scene) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save")) {
-                level.SaveLevel(level, "level.bin");
+                Level level;
+                scene.ToLevel(level);
+                level.Save("level.bin");
             }
             if (ImGui::MenuItem("Load")) {
-                level.LoadLevel(level, "level.bin");
-                scene.SetLevel(level);
+                Level level;
+                if (level.Load("level.bin")) {
+                    scene.FromLevel(level);
+                }
             }
             ImGui::EndMenu();
         }
@@ -85,67 +87,46 @@ void UI::DrawMainMenu(Level& level, Scene& scene) {
     }
 }
 
-void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
-    auto& objects = level.GetObjects();
+void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
     ImGui::Begin("Scene");
     ImGui::Text("Objects:");
+    auto& objects = scene.GetObjects();
     std::map<LevelObject::Type, int> typeCounter;
     bool anyItemHovered = false;
-    bool objectMenuOpened = false;
-    for (int i = 0; i < objects.size(); ++i) {
-        int num = ++typeCounter[objects[i].type];
-        std::string label = std::string(TypeToString(objects[i].type)) + " " + std::to_string(num);
-        bool selected = (selectedIndex == i);
-        ImGui::Selectable(label.c_str(), selected);
 
+    for (int i = 0; i < objects.size(); ++i) {
+        LevelObject::Type type = objects[i].type;
+        int num = ++typeCounter[type];
+        std::string label = std::string(TypeToString(type)) + " " + std::to_string(num);
+        bool selected = (selectedIndex == i);
+        if (ImGui::Selectable(label.c_str(), selected)) {
+            selectedIndex = i;
+        }
         if (ImGui::IsItemHovered())
             anyItemHovered = true;
 
-        if (ImGui::IsItemClicked())
-            selectedIndex = i;
-
-        std::string popupId = "ObjectContextMenu_" + std::to_string(i);
-        if (selected && ImGui::IsItemClicked(ImGuiMouseButton_Right))
-            ImGui::OpenPopup(popupId.c_str());
-
-        if (ImGui::BeginPopup(popupId.c_str())) {
-            objectMenuOpened = true;
+        if (ImGui::BeginPopupContextItem()) {
             if (ImGui::MenuItem("Delete Object")) {
-                objects.erase(objects.begin() + i);
-                if (selectedIndex >= objects.size())
-                    selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.SetLevel(level);
+                scene.RemoveObjectAt(i);
+                if (selectedIndex >= scene.GetObjects().size())
+                    selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
                 ImGui::CloseCurrentPopup();
+                ImGui::EndPopup();
                 break;
             }
             ImGui::EndPopup();
         }
     }
 
-    if (!anyItemHovered && !objectMenuOpened &&
-        ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_MouseButtonRight)) {
+    if (!anyItemHovered && ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_MouseButtonRight)) {
         if (ImGui::BeginMenu("Add Object")) {
             if (ImGui::MenuItem("Cube")) {
-                LevelObject obj;
-                obj.type = LevelObject::Cube;
-                obj.position = {0, 0, 0};
-                obj.rotationAngle = 0.0f;
-                obj.rotationAxis = {0, 1, 0};
-                obj.scale = {1, 1, 1};
-                level.AddObject(obj);
-                scene.AddMeshForObject(obj);
-                selectedIndex = static_cast<int>(objects.size()) - 1;
+                scene.AddObject(LevelObject::Cube);
+                selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
             }
             if (ImGui::MenuItem("Plane")) {
-                LevelObject obj;
-                obj.type = LevelObject::Plane;
-                obj.position = {0, 0, 0};
-                obj.rotationAngle = 0.0f;
-                obj.rotationAxis = {0, 1, 0};
-                obj.scale = {1, 1, 1};
-                level.AddObject(obj);
-                scene.AddMeshForObject(obj);
-                selectedIndex = static_cast<int>(objects.size()) - 1;
+                scene.AddObject(LevelObject::Plane);
+                selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
             }
             ImGui::EndMenu();
         }
@@ -154,8 +135,8 @@ void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
     ImGui::End();
 }
 
-void UI::DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
-    auto& objects = level.GetObjects();
+void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
+    auto& objects = scene.GetObjects();
     ImGui::Begin("Inspector");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
@@ -169,10 +150,9 @@ void UI::DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std
             scene.UpdateScene(selectedIndex, obj);
         }
 
-        // --- Textur anzeigen und wählen ---
         static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg" };
         static int currentTexture = 0;
-        auto* mesh = scene.GetMeshes().at(selectedIndex);
+        auto* mesh = obj.mesh;
 
         const char* currentTexturePath = nullptr;
         for (int i = 0; i < IM_ARRAYSIZE(textureOptions); ++i) {

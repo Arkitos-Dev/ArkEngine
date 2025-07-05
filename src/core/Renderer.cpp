@@ -10,8 +10,8 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, Level& lvl, UI& ui)
-        : window(win), scene(sc), shader(sh), camera(cam), level(lvl), ui(ui) {
+Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
+        : window(win), scene(sc), shader(sh), camera(cam), ui(ui) {
     camera.paused = &paused;
     SetUpShaderTextures();
     glEnable(GL_DEPTH_TEST);
@@ -111,6 +111,15 @@ void Renderer::DeleteViewportFBO() {
     viewportFBO = 0;
 }
 
+void Renderer::UpdateMeshCache() {
+    if (!meshesDirty) return;
+    cachedMeshes.clear();
+    for (auto& obj : scene.GetObjects()) {
+        if (obj.mesh) cachedMeshes.push_back(obj.mesh);
+    }
+    meshesDirty = false;
+}
+
 void Renderer::Render() {
     CreateViewportFBO(viewportWidth, viewportHeight);
     while (!window.ShouldClose()) {
@@ -137,9 +146,12 @@ void Renderer::Render() {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        // C++
         std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
-        for (auto* mesh : scene.GetMeshes()) {
-            meshGroups[mesh->GetPrototype()].push_back(mesh->GetModelMatrix());
+        for (auto& sceneObj : scene.GetObjects()) {
+            if (sceneObj.mesh) {
+                meshGroups[sceneObj.mesh->GetPrototype()].push_back(sceneObj.mesh->GetModelMatrix());
+            }
         }
 
         for (auto& [prototype, matrices] : meshGroups) {
@@ -153,9 +165,11 @@ void Renderer::Render() {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        UpdateMeshCache();
+
         ui.BeginFrame();
         ui.DrawViewport(viewportTexture, viewportWidth, viewportHeight);
-        ui.Draw(scene.GetMeshes(), level, scene);
+        ui.Draw(cachedMeshes, scene);
         ui.EndFrame();
 
         window.SwapBuffers();

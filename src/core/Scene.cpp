@@ -3,63 +3,80 @@
 #include "../../include/objects/Cube.hpp"
 
 Scene::~Scene() {
-    for (auto* mesh : meshes)
-        delete mesh;
+    for (auto& obj : objects)
+        delete obj.mesh;
 }
 
-void Scene::AddMesh(Mesh* mesh) {
-    meshes.push_back(mesh);
-}
-
-const std::vector<Mesh*>& Scene::GetMeshes() const {
-    return meshes;
-}
-
-void Scene::SetLevel(const Level& level) {
-    // Vorherige Meshes löschen
-    for (auto* mesh : meshes)
-        delete mesh;
-    meshes.clear();
-
-    for (const auto& obj : level.GetObjects()) {
-        Mesh* mesh = nullptr;
-        if (obj.type == LevelObject::Cube) {
-            mesh = new Cube();
-        } else if (obj.type == LevelObject::Plane) {
-            mesh = new Plane();
-        }
-        if (mesh) {
-            mesh->SetPosition(obj.position);
-            mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
-            mesh->SetScale(obj.scale);
-            AddMesh(mesh);
-        }
-    }
-}
-
-void Scene::UpdateScene(size_t index, const LevelObject& obj) {
-    if (index >= meshes.size()) return;
-    Mesh* mesh = meshes[index];
-    mesh->SetPosition(obj.position);
-    mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
-    mesh->SetScale(obj.scale);
-}
-
-// In Scene.cpp
-void Scene::AddMeshForObject(const LevelObject& obj) {
+void Scene::AddObject(LevelObject::Type type,
+                      const glm::vec3& position,
+                      float rotationAngle,
+                      const glm::vec3& rotationAxis,
+                      const glm::vec3& scale) {
     Mesh* mesh = nullptr;
-    if (obj.type == LevelObject::Cube) mesh = new Cube();
-    else if (obj.type == LevelObject::Plane) mesh = new Plane();
+    if (type == LevelObject::Cube) mesh = new Cube();
+    else if (type == LevelObject::Plane) mesh = new Plane();
     if (mesh) {
-        mesh->SetPosition(obj.position);
-        mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
-        mesh->SetScale(obj.scale);
-        AddMesh(mesh);
+        mesh->SetPosition(position);
+        mesh->SetRotation(rotationAngle, rotationAxis);
+        mesh->SetScale(scale);
+        objects.emplace_back(type, position, rotationAngle, rotationAxis, scale, mesh);
     }
 }
 
-void Scene::RemoveMeshAt(size_t index) {
-    if (index >= meshes.size()) return;
-    delete meshes[index];
-    meshes.erase(meshes.begin() + index);
+void Scene::RemoveObjectAt(size_t index) {
+    if (index >= objects.size()) return;
+    delete objects[index].mesh;
+    objects.erase(objects.begin() + index);
+}
+
+void Scene::UpdateScene(size_t index, const SceneObject& obj) {
+    if (index >= objects.size()) return;
+    if (objects[index].type != obj.type) {
+        delete objects[index].mesh;
+        if (obj.type == LevelObject::Cube)
+            objects[index].mesh = new Cube();
+        else if (obj.type == LevelObject::Plane)
+            objects[index].mesh = new Plane();
+    }
+    objects[index].type = obj.type;
+    objects[index].position = obj.position;
+    objects[index].rotationAngle = obj.rotationAngle;
+    objects[index].rotationAxis = obj.rotationAxis;
+    objects[index].scale = obj.scale;
+    if (objects[index].mesh) {
+        objects[index].mesh->SetPosition(obj.position);
+        objects[index].mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
+        objects[index].mesh->SetScale(obj.scale);
+    }
+}
+
+void Scene::Clear() {
+    for (auto& obj : objects)
+        delete obj.mesh;
+    objects.clear();
+}
+
+std::vector<SceneObject>& Scene::GetObjects() { return objects; }
+const std::vector<SceneObject>& Scene::GetObjects() const { return objects; }
+
+// Neu: Szene aus Level aufbauen
+void Scene::FromLevel(const Level& level) {
+    Clear();
+    for (const auto& obj : level.GetObjects()) {
+        AddObject(obj.type, obj.position, obj.rotationAngle, obj.rotationAxis, obj.scale);
+    }
+}
+
+// Neu: Szene in Level exportieren
+void Scene::ToLevel(Level& level) const {
+    level.Clear();
+    for (const auto& obj : objects) {
+        LevelObject lobj;
+        lobj.type = obj.type;
+        lobj.position = obj.position;
+        lobj.rotationAngle = obj.rotationAngle;
+        lobj.rotationAxis = obj.rotationAxis;
+        lobj.scale = obj.scale;
+        level.AddObject(lobj);
+    }
 }
