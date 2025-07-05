@@ -1,9 +1,9 @@
 //
 // Created by Anton on 03.07.2025.
 //
-#include "../include/Mesh.hpp"
-#include "../include/ResourceManager.hpp"
-#include <glad/glad.h>
+#include "../../include/objects/Mesh.hpp"
+#include "../../include/core/ResourceManager.hpp"
+#include "glad/glad.h"
 
 Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, size_t idxSize, const char* texturePath1, const char* texturePath2)
         : indexCount(idxSize / sizeof(unsigned int)), texture1(0), texture2(0)
@@ -91,3 +91,7 @@ void Mesh::Bind() const {
 }
 void Mesh::Unbind() const { glBindVertexArray(0); }
 void Mesh::Draw() const { glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0); }
+
+void Mesh::SetTexture(const char *texturePath) {
+    texture1 = ResourceManager::GetTexture(texturePath);
+}

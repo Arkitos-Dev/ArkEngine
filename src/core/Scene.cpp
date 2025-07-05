@@ -1,6 +1,6 @@
-#include "../include/Scene.hpp"
-#include "../include/Plane.hpp"
-#include "../include/Cube.hpp"
+#include "../../include/core/Scene.hpp"
+#include "../../include/objects/Plane.hpp"
+#include "../../include/objects/Cube.hpp"
 
 Scene::~Scene() {
     for (auto* mesh : meshes)

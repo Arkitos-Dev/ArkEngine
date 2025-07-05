@@ -1,7 +1,7 @@
 //
 // Created by Anton on 04.07.2025.
 //
-#include "../include/Level.hpp"
+#include "../../include/objects/Level.hpp"
 #include <fstream>
 
 void writeVec3(std::ofstream& out, const glm::vec3& v) {

@@ -1,12 +1,10 @@
-//
-// Created by Anton on 04.07.2025.
-//
-#include "../include/UI.hpp"
+// C++
+#include "../../include/core/UI.hpp"
 
 UI::UI(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); // Optional, falls du io brauchst
+    ImGuiIO& io = ImGui::GetIO();
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
@@ -24,7 +22,7 @@ void UI::BeginFrame() {
     ImGui::NewFrame();
 
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar; // <- Kein NoDocking mehr!
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar;
     ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -46,7 +44,6 @@ void UI::BeginFrame() {
 void UI::EndFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 }
 
 const char* UI::TypeToString(LevelObject::Type type) {
@@ -60,37 +57,38 @@ const char* UI::TypeToString(LevelObject::Type type) {
     }
 }
 
-// C++
 void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     static int selectedIndex = 0;
-    auto& objects = level.GetObjects();
+    DrawMainMenu(level, scene);
+    DrawSceneList(level, scene, selectedIndex);
+    DrawObjectInfo(level, scene, selectedIndex, meshes);
+}
 
+void UI::DrawMainMenu(Level& level, Scene& scene) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            // Im "File"-Menü im UI::draw
             if (ImGui::MenuItem("Save")) {
                 level.SaveLevel(level, "level.bin");
             }
             if (ImGui::MenuItem("Load")) {
                 level.LoadLevel(level, "level.bin");
-                scene.SetLevel(level); // Szene nach dem Laden aktualisieren
+                scene.SetLevel(level);
             }
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Bearbeiten")) {
-            if (ImGui::MenuItem("Rückgängig", "Strg+Z")) {
-                // TODO: Undo
-            }
-            if (ImGui::MenuItem("Wiederholen", "Strg+Y")) {
-                // TODO: Redo
-            }
+            ImGui::MenuItem("Rückgängig", "Strg+Z");
+            ImGui::MenuItem("Wiederholen", "Strg+Y");
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
+}
 
+void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
+    auto& objects = level.GetObjects();
     ImGui::Begin("Scene");
-    ImGui::Text("Objects:");
+    ImGui::Text("objects:");
     std::map<LevelObject::Type, int> typeCounter;
     bool anyItemHovered = false;
     bool objectMenuOpened = false;
@@ -106,7 +104,6 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
         if (ImGui::IsItemClicked())
             selectedIndex = i;
 
-        // Eindeutiger Popup-Name pro Objekt
         std::string popupId = "ObjectContextMenu_" + std::to_string(i);
         if (selected && ImGui::IsItemClicked(ImGuiMouseButton_Right))
             ImGui::OpenPopup(popupId.c_str());
@@ -125,7 +122,6 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
         }
     }
 
-// Fenster-Kontextmenü nur, wenn kein Objekt-Menü offen und kein Item hovered
     if (!anyItemHovered && !objectMenuOpened &&
         ImGui::BeginPopupContextWindow("SceneContextMenu", ImGuiPopupFlags_MouseButtonRight)) {
         if (ImGui::BeginMenu("Add Object")) {
@@ -156,7 +152,10 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
         ImGui::EndPopup();
     }
     ImGui::End();
+}
 
+void UI::DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
+    auto& objects = level.GetObjects();
     ImGui::Begin("Objekt-Daten");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
@@ -168,6 +167,26 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
         changed |= ImGui::DragFloat3("Skalierung", &obj.scale.x, 0.05f, 0.01f, 100.0f);
         if (changed) {
             scene.SetLevel(level);
+        }
+
+        // --- Textur anzeigen und wählen ---
+        static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg" };
+        static int currentTexture = 0;
+        auto* mesh = scene.GetMeshes().at(selectedIndex);
+
+        const char* currentTexturePath = nullptr;
+        for (int i = 0; i < IM_ARRAYSIZE(textureOptions); ++i) {
+            if (ResourceManager::GetTexture(textureOptions[i]) == mesh->GetTextureID()) {
+                currentTexture = i;
+                currentTexturePath = textureOptions[i];
+                break;
+            }
+        }
+        if (!currentTexturePath) currentTexturePath = "Unbekannt";
+
+        ImGui::Text("Aktuelle Textur: %s", currentTexturePath);
+        if (ImGui::Combo("Textur wählen", &currentTexture, textureOptions, IM_ARRAYSIZE(textureOptions))) {
+            mesh->SetTexture(textureOptions[currentTexture]);
         }
     } else {
         ImGui::Text("Kein Objekt vorhanden.");

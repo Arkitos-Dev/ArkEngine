@@ -1,11 +1,11 @@
 //
 // Created by Anton on 03.07.2025.
 //
-#include <glad/glad.h>
-#include "../include/Renderer.hpp"
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "glad/glad.h"
+#include "../../include/core/Renderer.hpp"
+#include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include <sstream>
 #include <thread>
 #include <map>

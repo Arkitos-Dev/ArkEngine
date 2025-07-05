@@ -55,16 +55,16 @@ target_include_directories(imgui PUBLIC
 
 add_executable(3DRenderer
         src/main.cpp
-        src/Window.cpp
-        src/Shader.cpp
-        src/Mesh.cpp
-        src/Scene.cpp
-        src/Renderer.cpp
-        src/Camera.cpp
-        src/UI.cpp
-        src/Level.cpp
-        src/ResourceManager.cpp
-        src/ArkEngine.cpp
+        src/core/Window.cpp
+        src/core/Shader.cpp
+        src/objects/Mesh.cpp
+        src/core/Scene.cpp
+        src/core/Renderer.cpp
+        src/core/Camera.cpp
+        src/core/UI.cpp
+        src/objects/Level.cpp
+        src/core/ResourceManager.cpp
+        src/core/ArkEngine.cpp
 )
 
 # Include directories

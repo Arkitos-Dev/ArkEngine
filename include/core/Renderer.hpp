@@ -8,7 +8,7 @@
 #include "Window.hpp"
 #include "Shader.hpp"
 #include "Scene.hpp"
-#include "Cube.hpp"
+#include "../objects/Cube.hpp"
 #include "Camera.hpp"
 #include "UI.hpp"
 

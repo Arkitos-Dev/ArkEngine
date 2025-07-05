@@ -2,7 +2,7 @@
 // Created by Anton on 05.07.2025.
 //
 
-#include "../include/ArkEngine.hpp"
+#include "../../include/core/ArkEngine.hpp"
 
 ArkEngine::ArkEngine(int width, int height, const std::string& title) {}
 

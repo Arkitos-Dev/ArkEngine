@@ -707,7 +707,7 @@ struct ImSpanAllocator
 };
 
 // Helper: ImStableVector<>
-// Allocating chunks of BLOCK_SIZE items. Objects pointers are never invalidated when growing, only by clear().
+// Allocating chunks of BLOCK_SIZE items. objects pointers are never invalidated when growing, only by clear().
 // Important: does not destruct anything!
 // Implemented only the minimum set of functions we need for it.
 template<typename T, int BLOCK_SIZE>

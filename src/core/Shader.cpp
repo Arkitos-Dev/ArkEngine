@@ -1,8 +1,8 @@
 //
 // Created by Anton on 03.07.2025.
 //
-#include <glad/glad.h>
-#include "../include/Shader.hpp"
+#include "glad/glad.h"
+#include "../../include/core/Shader.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>

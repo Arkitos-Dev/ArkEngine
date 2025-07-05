@@ -1,7 +1,7 @@
 //
 // Created by Anton on 04.07.2025.
 //
-#include "../include/Camera.hpp"
+#include "../../include/core/Camera.hpp"
 
 Camera::Camera(GLFWwindow* window, bool hideCursor) {
     if (hideCursor)

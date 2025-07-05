@@ -6,8 +6,8 @@
 #define INC_3DRENDERER_SCENE_HPP
 
 #include <vector>
-#include "Mesh.hpp"
-#include "Level.hpp"
+#include "../objects/Mesh.hpp"
+#include "../objects/Level.hpp"
 #include <string>
 
 class Scene {

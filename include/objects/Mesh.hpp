@@ -5,9 +5,9 @@
 #ifndef INC_3DRENDERER_MESH_HPP
 #define INC_3DRENDERER_MESH_HPP
 #include <cstddef>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include <vector>
 #include <string>
 
@@ -28,6 +28,9 @@ public:
 
     void SetPrototype(Mesh* proto) { prototype = proto; }
     Mesh* GetPrototype() const { return prototype ? prototype : const_cast<Mesh*>(this); }
+
+    void SetTexture(const char* texturePath);
+    unsigned int GetTextureID() const { return texture1; }
 
     glm::mat4 GetModelMatrix() const { return model; }
     void Bind() const;

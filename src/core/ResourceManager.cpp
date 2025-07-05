@@ -2,9 +2,9 @@
 // Created by Anton on 05.07.2025.
 //
 
-#include "../include/ResourceManager.hpp"
-#include <stb_image.h>
-#include <glad/glad.h>
+#include "../../include/core/ResourceManager.hpp"
+#include "stb_image.h"
+#include "glad/glad.h"
 
 std::map<std::string, unsigned int> ResourceManager::textures;
 std::map<std::string, Shader*> ResourceManager::shaders;

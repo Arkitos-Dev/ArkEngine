@@ -1,13 +1,15 @@
+// C++
 #pragma once
-#include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
-#include <GLFW/glfw3.h>
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "GLFW/glfw3.h"
 #include <vector>
-#include "Mesh.hpp"
-#include "Level.hpp"
+#include "../objects/Mesh.hpp"
+#include "../objects/Level.hpp"
 #include <map>
 #include "Scene.hpp"
+#include "ResourceManager.hpp"
 
 class UI {
 public:
@@ -22,5 +24,7 @@ public:
 
     static const char* TypeToString(LevelObject::Type type);
 private:
-    // ggf. Membervariablen, falls benötigt
+    void DrawMainMenu(Level& level, Scene& scene);
+    void DrawSceneList(Level& level, Scene& scene, int& selectedIndex);
+    void DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes);
 };
