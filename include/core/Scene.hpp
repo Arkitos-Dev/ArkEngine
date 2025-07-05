@@ -5,6 +5,8 @@
 #include "../objects/Level.hpp"
 #include <vector>
 #include <string>
+
+#include "Shader.hpp"
 #include "glm/glm.hpp"
 
 struct SceneObject {
@@ -14,6 +16,7 @@ struct SceneObject {
     glm::vec3 rotationAxis = {0,1,0};
     glm::vec3 scale = {1,1,1};
     Mesh* mesh = nullptr;
+    Shader* shader = nullptr;
 };
 
 class Scene {

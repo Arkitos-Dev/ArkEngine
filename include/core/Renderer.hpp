@@ -33,11 +33,14 @@ private:
     GLuint viewportRBO = 0;
     int viewportWidth = 1280, viewportHeight = 720;
 
+    unsigned int lightVAO = 0, lightVBO = 0;
+
     void CreateViewportFBO(int width, int height);
     void DeleteViewportFBO();
     void UpdateFPS();
     void LimitFPS(double frameStart, double targetFPS);
-    void SetUpShaderTextures();
+    void SetUpShaders();
+    void lightVertices();
     void UpdateMeshCache();
     void Input();
 

@@ -13,10 +13,12 @@
 Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
         : window(win), scene(sc), shader(sh), camera(cam), ui(ui) {
     camera.paused = &paused;
-    SetUpShaderTextures();
+    SetUpShaders();
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
+
+    lightVertices();
 }
 
 void Renderer::Input() {
@@ -71,10 +73,29 @@ void Renderer::LimitFPS(double frameStart, double targetFPS) {
     } while (elapsed < targetFrameTime);
 }
 
-void Renderer::SetUpShaderTextures() {
+void Renderer::SetUpShaders() {
     shader->Use();
     shader->SetInt("texture1", 0);
     shader->SetInt("texture2", 1);
+}
+
+void Renderer::lightVertices() {
+    float lightVertices[] = {
+        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f, -0.5f,-0.5f,-0.5f,
+        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f,-0.5f, 0.5f,
+        -0.5f, 0.5f, 0.5f, -0.5f, 0.5f,-0.5f, -0.5f,-0.5f,-0.5f, -0.5f,-0.5f,-0.5f, -0.5f,-0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
+         0.5f, 0.5f, 0.5f,  0.5f, 0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f,
+        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f, -0.5f,-0.5f, 0.5f, -0.5f,-0.5f,-0.5f,
+        -0.5f, 0.5f,-0.5f,  0.5f, 0.5f,-0.5f,  0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f,-0.5f
+    };
+    glGenVertexArrays(1, &lightVAO);
+    glGenBuffers(1, &lightVBO);
+    glBindVertexArray(lightVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lightVertices), lightVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 }
 
 // Renderer.cpp
@@ -141,12 +162,35 @@ void Renderer::Render() {
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 
+        glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
+        // 1. LightCube rendern
+        Shader* lightShader = ResourceManager::GetShader("shaders/lightVert.vert", "shaders/lightFrag.frag");
+        lightShader->Use();
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightShader->SetMat4("model", model);
+        lightShader->SetMat4("view", camera.GetViewMatrix());
+        lightShader->SetMat4("projection", projection);
+        lightShader->SetVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        lightShader->SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        glBindVertexArray(lightVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+
+        // 2. Level-Meshes rendern
+        shader->Use();
+        shader->SetInt("texture1", 0);
+        shader->SetInt("texture2", 1);
         shader->SetMat4("projection", projection);
         shader->SetMat4("view", camera.GetViewMatrix());
+        shader->SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader->SetVec3("lightPos", lightPos);
+        shader->SetVec3("viewPos", camera.position);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        // C++
         std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
         for (auto& sceneObj : scene.GetObjects()) {
             if (sceneObj.mesh) {

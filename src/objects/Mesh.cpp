@@ -23,6 +23,7 @@ Mesh::Mesh(const float* vertices, size_t vertSize, const unsigned int* indices, 
         glEnableVertexAttribArray(3 + i);
         glVertexAttribDivisor(3 + i, 1);
     }
+
     glBindVertexArray(0);
 }
 
