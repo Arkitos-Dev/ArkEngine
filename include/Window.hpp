@@ -10,13 +10,13 @@ public:
     Window(int width, int height, const char* title);
     ~Window();
 
-    bool shouldClose() const;
-    void swapBuffers();
-    void pollEvents();
+    bool ShouldClose() const;
+    void SwapBuffers();
+    void PollEvents();
 
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-    GLFWwindow* getGLFWwindow() const;
+    GLFWwindow* GetWindow() const;
 
 private:
     GLFWwindow* window;

@@ -14,13 +14,13 @@ public:
     UI(GLFWwindow* window);
     ~UI();
 
-    void beginFrame();
-    void endFrame();
-    void draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene);
-    ImVec2 drawViewport(GLuint texture, int texWidth, int texHeight);
-    ImVec2 getRecommendedViewportSize(int texWidth, int texHeight);
+    void BeginFrame();
+    void EndFrame();
+    void Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene);
+    ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight);
+    ImVec2 GetRecommendedViewportSize(int texWidth, int texHeight);
 
-    static const char* typeToString(LevelObject::Type type);
+    static const char* TypeToString(LevelObject::Type type);
 private:
     // ggf. Membervariablen, falls benötigt
 };

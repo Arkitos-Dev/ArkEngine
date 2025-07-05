@@ -32,19 +32,19 @@ Window::~Window() {
     glfwTerminate();
 }
 
-bool Window::shouldClose() const {
+bool Window::ShouldClose() const {
     return glfwWindowShouldClose(window);
 }
 
-void Window::swapBuffers() {
+void Window::SwapBuffers() {
     glfwSwapBuffers(window);
 }
 
-void Window::pollEvents() {
+void Window::PollEvents() {
     glfwPollEvents();
 }
 
-GLFWwindow* Window::getGLFWwindow() const {
+GLFWwindow* Window::GetWindow() const {
     return window;
 }
 

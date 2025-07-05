@@ -38,7 +38,7 @@ void Level::LoadLevel(Level& level, const std::string& filename) {
     in.read(reinterpret_cast<char*>(&count), sizeof(count));
     if (!in || count > 10000) return;
 
-    level.clear();
+    level.Clear();
     level.getObjects().resize(count);
     for (size_t i = 0; i < count; ++i) {
         auto& obj = level.getObjects()[i];
@@ -49,6 +49,6 @@ void Level::LoadLevel(Level& level, const std::string& filename) {
         in.read(reinterpret_cast<char*>(&obj.rotationAngle), sizeof(obj.rotationAngle));
         readVec3(in, obj.rotationAxis);
         readVec3(in, obj.scale);
-        if (!in) { level.clear(); return; }
+        if (!in) { level.Clear(); return; }
     }
 }

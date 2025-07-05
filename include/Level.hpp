@@ -16,8 +16,8 @@ struct LevelObject {
 
 class Level {
 public:
-    void addObject(const LevelObject& obj) { objects.push_back(obj); }
-    void clear() { objects.clear(); }
+    void AddObject(const LevelObject& obj) { objects.push_back(obj); }
+    void Clear() { objects.clear(); }
     const std::vector<LevelObject>& getObjects() const { return objects; }
     std::vector<LevelObject>& getObjects() { return objects; }
     void SaveLevel(const Level& level, const std::string& filename);

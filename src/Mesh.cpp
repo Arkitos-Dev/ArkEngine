@@ -68,17 +68,17 @@ void Mesh::LoadTextures(const char* texturePath1, const char* texturePath2) {
     if (texturePath2) texture2 = ResourceManager::GetTexture(texturePath2);
 }
 
-void Mesh::setInstanceModelMatrices(const std::vector<glm::mat4>& matrices) {
+void Mesh::SetModelMatrices(const std::vector<glm::mat4>& matrices) {
     instanceCount = matrices.size();
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
 }
 
-void Mesh::drawInstanced() const {
+void Mesh::DrawInstanced() const {
     glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instanceCount));
 }
 
-void Mesh::bind() const {
+void Mesh::Bind() const {
     glBindVertexArray(VAO);
     if (texture1) {
         glActiveTexture(GL_TEXTURE0);
@@ -89,5 +89,5 @@ void Mesh::bind() const {
         glBindTexture(GL_TEXTURE_2D, texture2);
     }
 }
-void Mesh::unbind() const { glBindVertexArray(0); }
-void Mesh::draw() const { glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0); }
+void Mesh::Unbind() const { glBindVertexArray(0); }
+void Mesh::Draw() const { glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0); }

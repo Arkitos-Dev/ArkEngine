@@ -7,15 +7,15 @@ Scene::~Scene() {
         delete mesh;
 }
 
-void Scene::addMesh(Mesh* mesh) {
+void Scene::AddMesh(Mesh* mesh) {
     meshes.push_back(mesh);
 }
 
-const std::vector<Mesh*>& Scene::getMeshes() const {
+const std::vector<Mesh*>& Scene::GetMeshes() const {
     return meshes;
 }
 
-void Scene::loadLevel(const Level& level) {
+void Scene::LoadLevel(const Level& level) {
     // Vorherige Meshes löschen
     for (auto* mesh : meshes)
         delete mesh;
@@ -29,10 +29,10 @@ void Scene::loadLevel(const Level& level) {
             mesh = new Plane();
         }
         if (mesh) {
-            mesh->setPosition(obj.position);
-            mesh->setRotation(obj.rotationAngle, obj.rotationAxis);
-            mesh->setScale(obj.scale);
-            addMesh(mesh);
+            mesh->SetPosition(obj.position);
+            mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
+            mesh->SetScale(obj.scale);
+            AddMesh(mesh);
         }
     }
 }

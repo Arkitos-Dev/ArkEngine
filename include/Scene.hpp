@@ -14,9 +14,9 @@ class Scene {
 public:
     Scene() = default;
     ~Scene();
-    void addMesh(Mesh* mesh);
-    const std::vector<Mesh*>& getMeshes() const;
-    void loadLevel(const Level& level);
+    void AddMesh(Mesh* mesh);
+    const std::vector<Mesh*>& GetMeshes() const;
+    void LoadLevel(const Level& level);
 private:
     std::vector<Mesh*> meshes;
 };

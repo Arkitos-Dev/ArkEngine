@@ -18,7 +18,7 @@ UI::~UI() {
     ImGui::DestroyContext();
 }
 
-void UI::beginFrame() {
+void UI::BeginFrame() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -43,13 +43,13 @@ void UI::beginFrame() {
     ImGui::End();
 }
 
-void UI::endFrame() {
+void UI::EndFrame() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 }
 
-const char* UI::typeToString(LevelObject::Type type) {
+const char* UI::TypeToString(LevelObject::Type type) {
     switch (type) {
         case LevelObject::Cube:
             return "Cube";
@@ -61,7 +61,7 @@ const char* UI::typeToString(LevelObject::Type type) {
 }
 
 // C++
-void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
+void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     static int selectedIndex = 0;
     auto& objects = level.getObjects();
 
@@ -73,7 +73,7 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
             }
             if (ImGui::MenuItem("Load")) {
                 level.LoadLevel(level, "level.bin");
-                scene.loadLevel(level); // Szene nach dem Laden aktualisieren
+                scene.LoadLevel(level); // Szene nach dem Laden aktualisieren
             }
             ImGui::EndMenu();
         }
@@ -96,7 +96,7 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     bool objectMenuOpened = false;
     for (int i = 0; i < objects.size(); ++i) {
         int num = ++typeCounter[objects[i].type];
-        std::string label = std::string(typeToString(objects[i].type)) + " " + std::to_string(num);
+        std::string label = std::string(TypeToString(objects[i].type)) + " " + std::to_string(num);
         bool selected = (selectedIndex == i);
         ImGui::Selectable(label.c_str(), selected);
 
@@ -117,7 +117,7 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 objects.erase(objects.begin() + i);
                 if (selectedIndex >= objects.size())
                     selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.loadLevel(level);
+                scene.LoadLevel(level);
                 ImGui::CloseCurrentPopup();
                 break;
             }
@@ -136,9 +136,9 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 obj.rotationAngle = 0.0f;
                 obj.rotationAxis = {0, 1, 0};
                 obj.scale = {1, 1, 1};
-                level.addObject(obj);
+                level.AddObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.loadLevel(level);
+                scene.LoadLevel(level);
             }
             if (ImGui::MenuItem("Plane")) {
                 LevelObject obj;
@@ -147,9 +147,9 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 obj.rotationAngle = 0.0f;
                 obj.rotationAxis = {0, 1, 0};
                 obj.scale = {1, 1, 1};
-                level.addObject(obj);
+                level.AddObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.loadLevel(level);
+                scene.LoadLevel(level);
             }
             ImGui::EndMenu();
         }
@@ -160,14 +160,14 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     ImGui::Begin("Objekt-Daten");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
-        ImGui::Text("Typ: %s", typeToString(obj.type));
+        ImGui::Text("Typ: %s", TypeToString(obj.type));
         bool changed = false;
         changed |= ImGui::DragFloat3("Position", &obj.position.x, 0.05f);
         changed |= ImGui::DragFloat("Rotation", &obj.rotationAngle, 1.0f, -360.0f, 360.0f);
         changed |= ImGui::DragFloat3("Rotationsachse", &obj.rotationAxis.x, 0.05f);
         changed |= ImGui::DragFloat3("Skalierung", &obj.scale.x, 0.05f, 0.01f, 100.0f);
         if (changed) {
-            scene.loadLevel(level);
+            scene.LoadLevel(level);
         }
     } else {
         ImGui::Text("Kein Objekt vorhanden.");
@@ -175,7 +175,7 @@ void UI::draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     ImGui::End();
 }
 
-ImVec2 UI::drawViewport(GLuint texture, int texWidth, int texHeight) {
+ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight) {
     ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImVec2 avail = ImGui::GetContentRegionAvail();
     float availAspect = avail.x / avail.y;

@@ -15,7 +15,7 @@
 class Renderer {
 public:
     Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, Level& lvl);
-    void render();
+    void Render();
 private:
     double lastTime = 0.0;
     int nbFrames = 0;
@@ -30,11 +30,11 @@ private:
     GLuint viewportRBO = 0;
     int viewportWidth = 1280, viewportHeight = 720;
 
-    void createViewportFBO(int width, int height);
-    void deleteViewportFBO();
-    void updateFPS();
-    void limitFrameRate(double frameStart, double targetFPS);
-    void setUpShaderTextures();
+    void CreateViewportFBO(int width, int height);
+    void DeleteViewportFBO();
+    void UpdateFPS();
+    void LimitFrameRate(double frameStart, double targetFPS);
+    void SetUpShaderTextures();
     void Input();
 
     Window& window;

@@ -17,14 +17,14 @@ Camera::Camera(GLFWwindow* window, bool hideCursor) {
 
     yaw = -90.0f;
     pitch = 0.0f;
-    updateViewMatrix();
+    UpdateViewMatrix();
 }
 
-void Camera::updateViewMatrix() {
+void Camera::UpdateViewMatrix() {
     view = glm::lookAt(position, position + front, up);
 }
 
-glm::mat4 Camera::getViewMatrix() const {
+glm::mat4 Camera::GetViewMatrix() const {
     return view;
 }
 
@@ -47,7 +47,7 @@ void Camera::Movement(GLFWwindow* window, float deltaTime) {
     if (glm::length(movement) > 0.0f)
         position += glm::normalize(movement) * cameraSpeed;
 
-    updateViewMatrix();
+    UpdateViewMatrix();
 }
 
 void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -82,7 +82,7 @@ void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     front = glm::normalize(direction);
 
-    updateViewMatrix();
+    UpdateViewMatrix();
 }
 
 // In src/Camera.cpp

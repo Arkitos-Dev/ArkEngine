@@ -11,24 +11,24 @@
 #include <map>
 
 Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, Level& lvl)
-        : window(win), scene(sc), shader(sh), camera(cam), ui(win.getGLFWwindow()), level(lvl) {
+        : window(win), scene(sc), shader(sh), camera(cam), ui(win.GetWindow()), level(lvl) {
     camera.paused = &paused;
-    setUpShaderTextures();
+    SetUpShaderTextures();
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
 }
 
 void Renderer::Input() {
-    if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    if (glfwGetKey(window.GetWindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         if (!escPressedLastFrame) {
             paused = !paused;
             if (paused)
-                glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                glfwSetInputMode(window.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             else {
-                glfwSetInputMode(window.getGLFWwindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                glfwSetInputMode(window.GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                 double xpos, ypos;
-                glfwGetCursorPos(window.getGLFWwindow(), &xpos, &ypos);
+                glfwGetCursorPos(window.GetWindow(), &xpos, &ypos);
                 camera.lastX = xpos;
                 camera.lastY = ypos;
                 camera.firstMouse = true; // <-- Hinzufügen!
@@ -41,23 +41,23 @@ void Renderer::Input() {
 
     // Bewegung und Kamera nur wenn nicht pausiert
     if (!paused) {
-        camera.Movement(window.getGLFWwindow(), deltaTime);
+        camera.Movement(window.GetWindow(), deltaTime);
     }
 }
 
-void Renderer::updateFPS() {
+void Renderer::UpdateFPS() {
     double currentTime = glfwGetTime();
     nbFrames++;
     if (currentTime - lastTime >= 1.0) {
         std::stringstream ss;
         ss << "3D Renderer - FPS: " << nbFrames;
-        glfwSetWindowTitle(window.getGLFWwindow(), ss.str().c_str());
+        glfwSetWindowTitle(window.GetWindow(), ss.str().c_str());
         nbFrames = 0;
         lastTime += 1.0;
     }
 }
 
-void Renderer::limitFrameRate(double frameStart, double targetFPS) {
+void Renderer::LimitFrameRate(double frameStart, double targetFPS) {
     double frameEnd = glfwGetTime();
     double frameDuration = frameEnd - frameStart;
     double targetFrameTime = 1.0 / targetFPS;
@@ -68,15 +68,15 @@ void Renderer::limitFrameRate(double frameStart, double targetFPS) {
     }
 }
 
-void Renderer::setUpShaderTextures() {
-    shader->use();
-    shader->setInt("texture1", 0);
-    shader->setInt("texture2", 1);
+void Renderer::SetUpShaderTextures() {
+    shader->Use();
+    shader->SetInt("texture1", 0);
+    shader->SetInt("texture2", 1);
 }
 
 // Renderer.cpp
-void Renderer::createViewportFBO(int width, int height) {
-    if (viewportFBO) deleteViewportFBO();
+void Renderer::CreateViewportFBO(int width, int height) {
+    if (viewportFBO) DeleteViewportFBO();
 
     glGenFramebuffers(1, &viewportFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, viewportFBO);
@@ -99,7 +99,7 @@ void Renderer::createViewportFBO(int width, int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Renderer::deleteViewportFBO() {
+void Renderer::DeleteViewportFBO() {
     if (viewportTexture) glDeleteTextures(1, &viewportTexture);
     if (viewportRBO) glDeleteRenderbuffers(1, &viewportRBO);
     if (viewportFBO) glDeleteFramebuffers(1, &viewportFBO);
@@ -108,14 +108,14 @@ void Renderer::deleteViewportFBO() {
     viewportFBO = 0;
 }
 
-void Renderer::render() {
-    createViewportFBO(viewportWidth, viewportHeight);
-    while (!window.shouldClose()) {
+void Renderer::Render() {
+    CreateViewportFBO(viewportWidth, viewportHeight);
+    while (!window.ShouldClose()) {
         double frameStart = glfwGetTime();
         deltaTime = frameStart - lastFrameTime;
         lastFrameTime = frameStart;
 
-        updateFPS();
+        UpdateFPS();
         Input();
 
         glBindFramebuffer(GL_FRAMEBUFFER, viewportFBO);
@@ -124,41 +124,41 @@ void Renderer::render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         int width, height;
-        glfwGetFramebufferSize(window.getGLFWwindow(), &width, &height);
+        glfwGetFramebufferSize(window.GetWindow(), &width, &height);
         float aspect = static_cast<float>(width) / static_cast<float>(height);
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
 
-        shader->setMat4("projection", projection);
-        shader->setMat4("view", camera.getViewMatrix());
+        shader->SetMat4("projection", projection);
+        shader->SetMat4("view", camera.GetViewMatrix());
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
-        for (auto* mesh : scene.getMeshes()) {
-            meshGroups[mesh->getPrototype()].push_back(mesh->getModelMatrix());
+        for (auto* mesh : scene.GetMeshes()) {
+            meshGroups[mesh->GetPrototype()].push_back(mesh->GetModelMatrix());
         }
 
         for (auto& [prototype, matrices] : meshGroups) {
             if (!matrices.empty()) {
-                prototype->setInstanceModelMatrices(matrices);
-                prototype->bind();
-                prototype->drawInstanced();
-                prototype->unbind();
+                prototype->SetModelMatrices(matrices);
+                prototype->Bind();
+                prototype->DrawInstanced();
+                prototype->Unbind();
             }
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        ui.beginFrame();
-        ui.drawViewport(viewportTexture, viewportWidth, viewportHeight);
-        ui.draw(scene.getMeshes(), level, scene);
-        ui.endFrame();
+        ui.BeginFrame();
+        ui.DrawViewport(viewportTexture, viewportWidth, viewportHeight);
+        ui.Draw(scene.GetMeshes(), level, scene);
+        ui.EndFrame();
 
-        window.swapBuffers();
-        window.pollEvents();
+        window.SwapBuffers();
+        window.PollEvents();
 
-        //limitFrameRate(frameStart, 120);
+        //LimitFrameRate(frameStart, 120);
     }
-    deleteViewportFBO();
+    DeleteViewportFBO();
 }

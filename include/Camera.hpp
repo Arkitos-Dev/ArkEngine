@@ -20,8 +20,8 @@ public:
     glm::mat4 view;
 
     Camera(GLFWwindow* window, bool hideCursor = true);
-    void updateViewMatrix();
-    glm::mat4 getViewMatrix() const;
+    void UpdateViewMatrix();
+    glm::mat4 GetViewMatrix() const;
     void Movement(GLFWwindow* window, float deltaTime);
     static void mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos);
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);
