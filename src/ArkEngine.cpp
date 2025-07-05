@@ -20,8 +20,10 @@ void ArkEngine::Run() {
     level.LoadLevel(level, "level.bin");
 
     Scene scene;
-    scene.LoadLevel(level);
+    scene.SetLevel(level);
 
-    Renderer renderer(window, scene, shader, camera, level);
+    UI ui(window.GetWindow());
+
+    Renderer renderer(window, scene, shader, camera, level, ui);
     renderer.Render();
 }

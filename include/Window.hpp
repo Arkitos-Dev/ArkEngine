@@ -13,9 +13,7 @@ public:
     bool ShouldClose() const;
     void SwapBuffers();
     void PollEvents();
-
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
     GLFWwindow* GetWindow() const;
 
 private:

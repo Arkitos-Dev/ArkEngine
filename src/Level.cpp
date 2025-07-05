@@ -18,9 +18,9 @@ void readVec3(std::ifstream& in, glm::vec3& v) {
 
 void Level::SaveLevel(const Level& level, const std::string& filename) {
     std::ofstream out(filename, std::ios::binary);
-    size_t count = level.getObjects().size();
+    size_t count = level.GetObjects().size();
     out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-    for (const auto& obj : level.getObjects()) {
+    for (const auto& obj : level.GetObjects()) {
         int type = static_cast<int>(obj.type);
         out.write(reinterpret_cast<const char*>(&type), sizeof(type));
         writeVec3(out, obj.position);
@@ -39,9 +39,9 @@ void Level::LoadLevel(Level& level, const std::string& filename) {
     if (!in || count > 10000) return;
 
     level.Clear();
-    level.getObjects().resize(count);
+    level.GetObjects().resize(count);
     for (size_t i = 0; i < count; ++i) {
-        auto& obj = level.getObjects()[i];
+        auto& obj = level.GetObjects()[i];
         int type = 0;
         in.read(reinterpret_cast<char*>(&type), sizeof(type));
         obj.type = static_cast<LevelObject::Type>(type);

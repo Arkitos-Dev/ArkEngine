@@ -16,7 +16,7 @@ public:
     ~Scene();
     void AddMesh(Mesh* mesh);
     const std::vector<Mesh*>& GetMeshes() const;
-    void LoadLevel(const Level& level);
+    void SetLevel(const Level& level);
 private:
     std::vector<Mesh*> meshes;
 };

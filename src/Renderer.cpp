@@ -10,8 +10,8 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, Level& lvl)
-        : window(win), scene(sc), shader(sh), camera(cam), ui(win.GetWindow()), level(lvl) {
+Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, Level& lvl, UI& ui)
+        : window(win), scene(sc), shader(sh), camera(cam), level(lvl), ui(ui) {
     camera.paused = &paused;
     SetUpShaderTextures();
     glEnable(GL_DEPTH_TEST);

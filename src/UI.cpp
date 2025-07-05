@@ -63,7 +63,7 @@ const char* UI::TypeToString(LevelObject::Type type) {
 // C++
 void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
     static int selectedIndex = 0;
-    auto& objects = level.getObjects();
+    auto& objects = level.GetObjects();
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -73,7 +73,7 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
             }
             if (ImGui::MenuItem("Load")) {
                 level.LoadLevel(level, "level.bin");
-                scene.LoadLevel(level); // Szene nach dem Laden aktualisieren
+                scene.SetLevel(level); // Szene nach dem Laden aktualisieren
             }
             ImGui::EndMenu();
         }
@@ -117,7 +117,7 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 objects.erase(objects.begin() + i);
                 if (selectedIndex >= objects.size())
                     selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.LoadLevel(level);
+                scene.SetLevel(level);
                 ImGui::CloseCurrentPopup();
                 break;
             }
@@ -138,7 +138,7 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 obj.scale = {1, 1, 1};
                 level.AddObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.LoadLevel(level);
+                scene.SetLevel(level);
             }
             if (ImGui::MenuItem("Plane")) {
                 LevelObject obj;
@@ -149,7 +149,7 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
                 obj.scale = {1, 1, 1};
                 level.AddObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.LoadLevel(level);
+                scene.SetLevel(level);
             }
             ImGui::EndMenu();
         }
@@ -167,7 +167,7 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene) {
         changed |= ImGui::DragFloat3("Rotationsachse", &obj.rotationAxis.x, 0.05f);
         changed |= ImGui::DragFloat3("Skalierung", &obj.scale.x, 0.05f, 0.01f, 100.0f);
         if (changed) {
-            scene.LoadLevel(level);
+            scene.SetLevel(level);
         }
     } else {
         ImGui::Text("Kein Objekt vorhanden.");

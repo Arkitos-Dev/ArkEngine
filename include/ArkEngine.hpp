@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "Scene.hpp"
 #include "ResourceManager.hpp"
+#include "UI.hpp"
 
 class ArkEngine {
 public:

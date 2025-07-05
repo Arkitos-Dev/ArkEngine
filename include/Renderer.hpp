@@ -14,7 +14,7 @@
 
 class Renderer {
 public:
-    Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, Level& lvl);
+    Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, Level& lvl, UI& ui);
     void Render();
 private:
     double lastTime = 0.0;
@@ -41,7 +41,7 @@ private:
     Scene& scene;
     Shader* shader;
     Camera& camera;
-    UI ui;
+    UI& ui;
     Level& level;
 };
 

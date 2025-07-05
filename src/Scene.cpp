@@ -15,13 +15,13 @@ const std::vector<Mesh*>& Scene::GetMeshes() const {
     return meshes;
 }
 
-void Scene::LoadLevel(const Level& level) {
+void Scene::SetLevel(const Level& level) {
     // Vorherige Meshes löschen
     for (auto* mesh : meshes)
         delete mesh;
     meshes.clear();
 
-    for (const auto& obj : level.getObjects()) {
+    for (const auto& obj : level.GetObjects()) {
         Mesh* mesh = nullptr;
         if (obj.type == LevelObject::Cube) {
             mesh = new Cube();
