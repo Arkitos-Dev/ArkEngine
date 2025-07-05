@@ -17,6 +17,9 @@ public:
     void AddMesh(Mesh* mesh);
     const std::vector<Mesh*>& GetMeshes() const;
     void SetLevel(const Level& level);
+    void UpdateScene(size_t index, const LevelObject& obj);
+    void AddMeshForObject(const LevelObject& obj);
+    void RemoveMeshAt(size_t index);
 private:
     std::vector<Mesh*> meshes;
 };

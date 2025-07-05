@@ -57,15 +57,18 @@ void Renderer::UpdateFPS() {
     }
 }
 
-void Renderer::LimitFrameRate(double frameStart, double targetFPS) {
-    double frameEnd = glfwGetTime();
-    double frameDuration = frameEnd - frameStart;
+void Renderer::LimitFPS(double frameStart, double targetFPS) {
+    if (targetFPS <= 0.0) return;
+
     double targetFrameTime = 1.0 / targetFPS;
-    if (frameDuration < targetFrameTime) {
-        std::this_thread::sleep_for(
-                std::chrono::duration<double>(targetFrameTime - frameDuration)
-        );
-    }
+    double elapsed;
+
+    do {
+        elapsed = glfwGetTime() - frameStart;
+        if (elapsed < targetFrameTime) {
+            std::this_thread::yield();
+        }
+    } while (elapsed < targetFrameTime);
 }
 
 void Renderer::SetUpShaderTextures() {
@@ -158,7 +161,7 @@ void Renderer::Render() {
         window.SwapBuffers();
         window.PollEvents();
 
-        //LimitFrameRate(frameStart, 120);
+        LimitFPS(frameStart, 300.0);
     }
     DeleteViewportFBO();
 }

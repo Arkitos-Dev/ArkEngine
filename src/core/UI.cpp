@@ -88,7 +88,7 @@ void UI::DrawMainMenu(Level& level, Scene& scene) {
 void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
     auto& objects = level.GetObjects();
     ImGui::Begin("Scene");
-    ImGui::Text("objects:");
+    ImGui::Text("Objects:");
     std::map<LevelObject::Type, int> typeCounter;
     bool anyItemHovered = false;
     bool objectMenuOpened = false;
@@ -133,8 +133,8 @@ void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
                 obj.rotationAxis = {0, 1, 0};
                 obj.scale = {1, 1, 1};
                 level.AddObject(obj);
+                scene.AddMeshForObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.SetLevel(level);
             }
             if (ImGui::MenuItem("Plane")) {
                 LevelObject obj;
@@ -144,8 +144,8 @@ void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
                 obj.rotationAxis = {0, 1, 0};
                 obj.scale = {1, 1, 1};
                 level.AddObject(obj);
+                scene.AddMeshForObject(obj);
                 selectedIndex = static_cast<int>(objects.size()) - 1;
-                scene.SetLevel(level);
             }
             ImGui::EndMenu();
         }
@@ -156,7 +156,7 @@ void UI::DrawSceneList(Level& level, Scene& scene, int& selectedIndex) {
 
 void UI::DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
     auto& objects = level.GetObjects();
-    ImGui::Begin("Objekt-Daten");
+    ImGui::Begin("Inspector");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
         ImGui::Text("Typ: %s", TypeToString(obj.type));
@@ -166,7 +166,7 @@ void UI::DrawObjectInfo(Level& level, Scene& scene, int selectedIndex, const std
         changed |= ImGui::DragFloat3("Rotationsachse", &obj.rotationAxis.x, 0.05f);
         changed |= ImGui::DragFloat3("Skalierung", &obj.scale.x, 0.05f, 0.01f, 100.0f);
         if (changed) {
-            scene.SetLevel(level);
+            scene.UpdateScene(selectedIndex, obj);
         }
 
         // --- Textur anzeigen und wählen ---

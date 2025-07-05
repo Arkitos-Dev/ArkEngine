@@ -36,3 +36,30 @@ void Scene::SetLevel(const Level& level) {
         }
     }
 }
+
+void Scene::UpdateScene(size_t index, const LevelObject& obj) {
+    if (index >= meshes.size()) return;
+    Mesh* mesh = meshes[index];
+    mesh->SetPosition(obj.position);
+    mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
+    mesh->SetScale(obj.scale);
+}
+
+// In Scene.cpp
+void Scene::AddMeshForObject(const LevelObject& obj) {
+    Mesh* mesh = nullptr;
+    if (obj.type == LevelObject::Cube) mesh = new Cube();
+    else if (obj.type == LevelObject::Plane) mesh = new Plane();
+    if (mesh) {
+        mesh->SetPosition(obj.position);
+        mesh->SetRotation(obj.rotationAngle, obj.rotationAxis);
+        mesh->SetScale(obj.scale);
+        AddMesh(mesh);
+    }
+}
+
+void Scene::RemoveMeshAt(size_t index) {
+    if (index >= meshes.size()) return;
+    delete meshes[index];
+    meshes.erase(meshes.begin() + index);
+}

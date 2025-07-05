@@ -20,7 +20,6 @@ public:
     void EndFrame();
     void Draw(const std::vector<Mesh*>& meshes, Level& level, Scene& scene);
     ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight);
-    ImVec2 GetRecommendedViewportSize(int texWidth, int texHeight);
 
     static const char* TypeToString(LevelObject::Type type);
 private:

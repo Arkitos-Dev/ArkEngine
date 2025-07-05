@@ -5,6 +5,7 @@
 #include "../../include/core/Window.hpp"
 #include <iostream>
 
+// C++
 Window::Window(int width, int height, const char* title) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -12,7 +13,9 @@ Window::Window(int width, int height, const char* title) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_ALPHA_BITS, 0);
 
-    window = glfwCreateWindow(width, height, title, nullptr, nullptr);
+    window = glfwCreateWindow(
+            width, height, title, nullptr, nullptr
+    );
     if (!window) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -24,6 +27,8 @@ Window::Window(int width, int height, const char* title) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         exit(-1);
     }
+
+    glfwSwapInterval(0);
 
     glfwSetFramebufferSizeCallback(window, Window::framebuffer_size_callback);
 }

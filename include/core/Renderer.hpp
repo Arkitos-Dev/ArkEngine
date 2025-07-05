@@ -33,7 +33,7 @@ private:
     void CreateViewportFBO(int width, int height);
     void DeleteViewportFBO();
     void UpdateFPS();
-    void LimitFrameRate(double frameStart, double targetFPS);
+    void LimitFPS(double frameStart, double targetFPS);
     void SetUpShaderTextures();
     void Input();
 
