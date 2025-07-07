@@ -198,6 +198,30 @@ void Renderer::Render() {
         shader->SetInt("material.diffuse", 0);
         shader->SetInt("material.specular", 1);
 
+        glm::vec3 pointLightPositions[] = {
+                glm::vec3( 0.7f,  0.2f,  2.0f),
+                glm::vec3( 2.3f, -3.3f, -4.0f),
+                glm::vec3(-4.0f,  2.0f, -12.0f),
+                glm::vec3( 0.0f,  0.0f, -3.0f)
+        };
+
+        for (int i = 0; i < 4; ++i) {
+            std::string idx = "pointLights[" + std::to_string(i) + "]";
+            shader->SetVec3(idx + ".position", pointLightPositions[i]);
+            shader->SetVec3(idx + ".ambient", glm::vec3(0.05f));
+            shader->SetVec3(idx + ".diffuse", glm::vec3(0.8f));
+            shader->SetVec3(idx + ".specular", glm::vec3(1.0f));
+            shader->SetFloat(idx + ".constant", 1.0f);
+            shader->SetFloat(idx + ".linear", 0.09f);
+            shader->SetFloat(idx + ".quadratic", 0.032f);
+        }
+
+        // Directional Light setzen
+        shader->SetVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+        shader->SetVec3("dirLight.ambient",  glm::vec3(0.05f, 0.05f, 0.05f));
+        shader->SetVec3("dirLight.diffuse",  glm::vec3(0.4f, 0.4f, 0.4f));
+        shader->SetVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
