@@ -28,6 +28,10 @@ glm::mat4 Camera::GetViewMatrix() const {
     return view;
 }
 
+glm::mat4 Camera::GetProjectionMatrix(float aspect) const {
+    return glm::perspective(glm::radians(fov), aspect, nearPlane, farPlane);
+}
+
 void Camera::Movement(GLFWwindow* window, float deltaTime) {
     glm::vec3 movement(0.0f);
     const float cameraSpeed = 2.5f * deltaTime;

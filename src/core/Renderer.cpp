@@ -113,6 +113,84 @@ void Renderer::UpdateMeshCache() {
     meshesDirty = false;
 }
 
+void Renderer::SetProjectionMatrix(const glm::mat4& projection, const glm::mat4& view) {
+    shader->SetMat4("projection", projection);
+    shader->SetMat4("view", view);
+    shader->SetVec3("viewPos", camera.position);
+}
+
+void Renderer::SetMaterials() {
+    shader->SetFloat("material.shininess", 32.0f);
+    shader->SetInt("material.diffuse", 0);
+    shader->SetInt("material.specular", 1);
+}
+
+void Renderer::SetLighting(){
+    int pointLightIdx = 0;
+    for (const auto& obj : scene.GetObjects()) {
+        if (obj.kind == SceneObject::ObjectKind::Light) {
+            if (obj.lightType == SceneObject::LightType::Point && pointLightIdx < 4) {
+                PointLight point;
+                point.position = obj.position;
+                point.color = obj.color;
+                point.constant = obj.constant;
+                point.linear = obj.linear;
+                point.quadratic = obj.quadratic;
+                point.UploadToShader(shader, pointLightIdx++);
+            } else if (obj.lightType == SceneObject::LightType::Directional) {
+                DirectionalLight dir;
+                dir.direction = obj.direction;
+                dir.color = obj.color;
+                dir.UploadToShader(shader);
+            }
+        }
+    }
+
+    int numPointLights = 0;
+    for (const auto& obj : scene.GetObjects()) {
+        if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Point)
+            ++numPointLights;
+    }
+    shader->SetInt("numPointLights", numPointLights);
+
+    // Nach dem Zählen/Setzen der Lichter:
+    bool hasDirLight = false;
+    for (const auto& obj : scene.GetObjects()) {
+        if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Directional) {
+            shader->SetVec3("dirLight.direction", obj.direction);
+            shader->SetVec3("dirLight.ambient",  obj.color * 0.1f);
+            shader->SetVec3("dirLight.diffuse",  obj.color * 0.8f);
+            shader->SetVec3("dirLight.specular", obj.color * 1.0f);
+            hasDirLight = true;
+        }
+    }
+    if (!hasDirLight) {
+        // Setze alle Werte auf 0, damit das Licht "aus" ist
+        shader->SetVec3("dirLight.direction", glm::vec3(0,0,0));
+        shader->SetVec3("dirLight.ambient",  glm::vec3(0,0,0));
+        shader->SetVec3("dirLight.diffuse",  glm::vec3(0,0,0));
+        shader->SetVec3("dirLight.specular", glm::vec3(0,0,0));
+    }
+}
+
+void Renderer::RenderMeshes(){
+    std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
+    for (auto& sceneObj : scene.GetObjects()) {
+        if (sceneObj.mesh) {
+            meshGroups[sceneObj.mesh->GetPrototype()].push_back(sceneObj.mesh->GetModelMatrix());
+        }
+    }
+
+    for (auto& [prototype, matrices] : meshGroups) {
+        if (!matrices.empty()) {
+            prototype->SetModelMatrices(matrices);
+            prototype->Bind();
+            prototype->DrawInstanced();
+            prototype->Unbind();
+        }
+    }
+}
+
 void Renderer::Render() {
     CreateViewportFBO(viewportWidth, viewportHeight);
     while (!window.ShouldClose()) {
@@ -132,84 +210,13 @@ void Renderer::Render() {
         glfwGetFramebufferSize(window.GetWindow(), &width, &height);
         float aspect = static_cast<float>(width) / static_cast<float>(height);
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 100.0f);
-
-        glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-
         shader->Use();
-        shader->SetInt("texture1", 0);
-        shader->SetInt("texture2", 1);
-        shader->SetMat4("projection", projection);
-        shader->SetMat4("view", camera.GetViewMatrix());
-        shader->SetVec3("viewPos", camera.position);
-        shader->SetFloat("material.shininess", 32.0f);
-        shader->SetInt("material.diffuse", 0);
-        shader->SetInt("material.specular", 1);
-
-        int pointLightIdx = 0;
-        for (const auto& obj : scene.GetObjects()) {
-            if (obj.kind == SceneObject::ObjectKind::Light) {
-                if (obj.lightType == SceneObject::LightType::Point && pointLightIdx < 4) {
-                    PointLight point;
-                    point.position = obj.position;
-                    point.color = obj.color;
-                    point.constant = obj.constant;
-                    point.linear = obj.linear;
-                    point.quadratic = obj.quadratic;
-                    point.UploadToShader(shader, pointLightIdx++);
-                } else if (obj.lightType == SceneObject::LightType::Directional) {
-                    DirectionalLight dir;
-                    dir.direction = obj.direction;
-                    dir.color = obj.color;
-                    dir.UploadToShader(shader);
-                }
-            }
-        }
-
-        int numPointLights = 0;
-        for (const auto& obj : scene.GetObjects()) {
-            if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Point)
-                ++numPointLights;
-        }
-        shader->SetInt("numPointLights", numPointLights);
-
-        // Nach dem Zählen/Setzen der Lichter:
-        bool hasDirLight = false;
-        for (const auto& obj : scene.GetObjects()) {
-            if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Directional) {
-                shader->SetVec3("dirLight.direction", obj.direction);
-                shader->SetVec3("dirLight.ambient",  obj.color * 0.1f);
-                shader->SetVec3("dirLight.diffuse",  obj.color * 0.8f);
-                shader->SetVec3("dirLight.specular", obj.color * 1.0f);
-                hasDirLight = true;
-            }
-        }
-        if (!hasDirLight) {
-            // Setze alle Werte auf 0, damit das Licht "aus" ist
-            shader->SetVec3("dirLight.direction", glm::vec3(0,0,0));
-            shader->SetVec3("dirLight.ambient",  glm::vec3(0,0,0));
-            shader->SetVec3("dirLight.diffuse",  glm::vec3(0,0,0));
-            shader->SetVec3("dirLight.specular", glm::vec3(0,0,0));
-        }
+        SetProjectionMatrix(camera.GetProjectionMatrix(aspect), camera.GetViewMatrix());
+        SetMaterials();
+        SetLighting();
+        RenderMeshes();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
-        for (auto& sceneObj : scene.GetObjects()) {
-            if (sceneObj.mesh) {
-                meshGroups[sceneObj.mesh->GetPrototype()].push_back(sceneObj.mesh->GetModelMatrix());
-            }
-        }
-
-        for (auto& [prototype, matrices] : meshGroups) {
-            if (!matrices.empty()) {
-                prototype->SetModelMatrices(matrices);
-                prototype->Bind();
-                prototype->DrawInstanced();
-                prototype->Unbind();
-            }
-        }
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         UpdateMeshCache();

@@ -19,9 +19,14 @@ public:
     glm::vec3 up;
     glm::mat4 view;
 
+    float fov = 45.0f;
+    float nearPlane = 0.1f;
+    float farPlane = 100.0f;
+
     Camera(GLFWwindow* window, bool hideCursor = true);
     void UpdateViewMatrix();
     glm::mat4 GetViewMatrix() const;
+    glm::mat4 GetProjectionMatrix(float aspect) const;
     void Movement(GLFWwindow* window, float deltaTime);
     static void mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos);
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);
