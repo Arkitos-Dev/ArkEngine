@@ -9,8 +9,6 @@ uniform vec3 viewPos;
 
 uniform sampler2D texture1;
 uniform sampler2D texture2;
-uniform vec3 lightColor;
-uniform vec3 lightPos;
 
 struct Material {
     sampler2D diffuse;
@@ -19,17 +17,6 @@ struct Material {
 };
 
 uniform Material material;
-
-
-struct Light {
-    vec3 position;
-
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-};
-
-uniform Light light;
 
 struct DirLight {
     vec3 direction;
@@ -66,7 +53,9 @@ struct PointLight {
     vec3 diffuse;
     vec3 specular;
 };
-#define NR_POINT_LIGHTS 4
+
+#define NR_POINT_LIGHTS 16
+uniform int numPointLights;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -100,7 +89,7 @@ void main()
     // phase 1: Directional lighting
     vec3 result = CalcDirLight(dirLight, norm, viewDir);
     // phase 2: Point lights
-    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+    for(int i = 0; i < numPointLights; i++)
     result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
     // phase 3: Spot light
     //result += CalcSpotLight(spotLight, norm, FragPos, viewDir);

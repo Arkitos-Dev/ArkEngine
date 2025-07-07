@@ -13,12 +13,9 @@
 Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
         : window(win), scene(sc), shader(sh), camera(cam), ui(ui) {
     camera.paused = &paused;
-    SetUpShaders();
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
-
-    lightVertices();
 }
 
 void Renderer::Input() {
@@ -71,31 +68,6 @@ void Renderer::LimitFPS(double frameStart, double targetFPS) {
             std::this_thread::yield();
         }
     } while (elapsed < targetFrameTime);
-}
-
-void Renderer::SetUpShaders() {
-    shader->Use();
-    shader->SetInt("texture1", 0);
-    shader->SetInt("texture2", 1);
-}
-
-void Renderer::lightVertices() {
-    float lightVertices[] = {
-        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f, 0.5f,-0.5f,  0.5f, 0.5f,-0.5f, -0.5f, 0.5f,-0.5f, -0.5f,-0.5f,-0.5f,
-        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f,-0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f, -0.5f, 0.5f,-0.5f, -0.5f,-0.5f,-0.5f, -0.5f,-0.5f,-0.5f, -0.5f,-0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
-         0.5f, 0.5f, 0.5f,  0.5f, 0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f, 0.5f,  0.5f, 0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f, -0.5f,-0.5f, 0.5f, -0.5f,-0.5f,-0.5f,
-        -0.5f, 0.5f,-0.5f,  0.5f, 0.5f,-0.5f,  0.5f, 0.5f, 0.5f,  0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f,-0.5f
-    };
-    glGenVertexArrays(1, &lightVAO);
-    glGenBuffers(1, &lightVBO);
-    glBindVertexArray(lightVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lightVertices), lightVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
 }
 
 // Renderer.cpp
@@ -164,63 +136,61 @@ void Renderer::Render() {
 
         glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-        // 1. LightCube rendern
-        Shader* lightShader = ResourceManager::GetShader("shaders/lightVert.vert", "shaders/lightFrag.frag");
-        lightShader->Use();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
-        model = glm::scale(model, glm::vec3(0.2f));
-        lightShader->SetMat4("model", model);
-        lightShader->SetMat4("view", camera.GetViewMatrix());
-        lightShader->SetMat4("projection", projection);
-        lightShader->SetVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        lightShader->SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-
         shader->Use();
         shader->SetInt("texture1", 0);
         shader->SetInt("texture2", 1);
         shader->SetMat4("projection", projection);
         shader->SetMat4("view", camera.GetViewMatrix());
-        shader->SetVec3("lightPos", lightPos);
         shader->SetVec3("viewPos", camera.position);
-        shader->SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-        shader->SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-        shader->SetVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
         shader->SetFloat("material.shininess", 32.0f);
-        shader->SetVec3("light.ambient",  glm::vec3(0.1f, 0.1f, 0.1f));
-        shader->SetVec3("light.diffuse",  glm::vec3(0.5f, 0.0f, 1.0f));
-        shader->SetVec3("light.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-        shader->SetInt("material.diffuse", 0);
-
         shader->SetInt("material.diffuse", 0);
         shader->SetInt("material.specular", 1);
 
-        glm::vec3 pointLightPositions[] = {
-                glm::vec3( 0.7f,  0.2f,  2.0f),
-                glm::vec3( 2.3f, -3.3f, -4.0f),
-                glm::vec3(-4.0f,  2.0f, -12.0f),
-                glm::vec3( 0.0f,  0.0f, -3.0f)
-        };
-
-        for (int i = 0; i < 4; ++i) {
-            std::string idx = "pointLights[" + std::to_string(i) + "]";
-            shader->SetVec3(idx + ".position", pointLightPositions[i]);
-            shader->SetVec3(idx + ".ambient", glm::vec3(0.05f));
-            shader->SetVec3(idx + ".diffuse", glm::vec3(0.8f));
-            shader->SetVec3(idx + ".specular", glm::vec3(1.0f));
-            shader->SetFloat(idx + ".constant", 1.0f);
-            shader->SetFloat(idx + ".linear", 0.09f);
-            shader->SetFloat(idx + ".quadratic", 0.032f);
+        int pointLightIdx = 0;
+        for (const auto& obj : scene.GetObjects()) {
+            if (obj.kind == SceneObject::ObjectKind::Light) {
+                if (obj.lightType == SceneObject::LightType::Point && pointLightIdx < 4) {
+                    PointLight point;
+                    point.position = obj.position;
+                    point.color = obj.color;
+                    point.constant = obj.constant;
+                    point.linear = obj.linear;
+                    point.quadratic = obj.quadratic;
+                    point.UploadToShader(shader, pointLightIdx++);
+                } else if (obj.lightType == SceneObject::LightType::Directional) {
+                    DirectionalLight dir;
+                    dir.direction = obj.direction;
+                    dir.color = obj.color;
+                    dir.UploadToShader(shader);
+                }
+            }
         }
 
-        // Directional Light setzen
-        shader->SetVec3("dirLight.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-        shader->SetVec3("dirLight.ambient",  glm::vec3(0.05f, 0.05f, 0.05f));
-        shader->SetVec3("dirLight.diffuse",  glm::vec3(0.4f, 0.4f, 0.4f));
-        shader->SetVec3("dirLight.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        int numPointLights = 0;
+        for (const auto& obj : scene.GetObjects()) {
+            if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Point)
+                ++numPointLights;
+        }
+        shader->SetInt("numPointLights", numPointLights);
+
+        // Nach dem Zählen/Setzen der Lichter:
+        bool hasDirLight = false;
+        for (const auto& obj : scene.GetObjects()) {
+            if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Directional) {
+                shader->SetVec3("dirLight.direction", obj.direction);
+                shader->SetVec3("dirLight.ambient",  obj.color * 0.1f);
+                shader->SetVec3("dirLight.diffuse",  obj.color * 0.8f);
+                shader->SetVec3("dirLight.specular", obj.color * 1.0f);
+                hasDirLight = true;
+            }
+        }
+        if (!hasDirLight) {
+            // Setze alle Werte auf 0, damit das Licht "aus" ist
+            shader->SetVec3("dirLight.direction", glm::vec3(0,0,0));
+            shader->SetVec3("dirLight.ambient",  glm::vec3(0,0,0));
+            shader->SetVec3("dirLight.diffuse",  glm::vec3(0,0,0));
+            shader->SetVec3("dirLight.specular", glm::vec3(0,0,0));
+        }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

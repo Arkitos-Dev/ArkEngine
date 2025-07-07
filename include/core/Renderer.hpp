@@ -9,6 +9,9 @@
 #include "Shader.hpp"
 #include "Scene.hpp"
 #include "../objects/Cube.hpp"
+#include "../../include/objects/Light.hpp"
+#include "../../include/objects/PointLight.hpp"
+#include "../../include/objects/DirectionalLight.hpp"
 #include "Camera.hpp"
 #include "UI.hpp"
 

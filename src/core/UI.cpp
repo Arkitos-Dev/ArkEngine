@@ -87,17 +87,29 @@ void UI::DrawMainMenu(Scene& scene) {
     }
 }
 
+// src/core/UI.cpp
+
 void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
     ImGui::Begin("Scene");
     ImGui::Text("Objects:");
     auto& objects = scene.GetObjects();
-    std::map<LevelObject::Type, int> typeCounter;
+    std::map<std::string, int> typeCounter;
     bool anyItemHovered = false;
 
     for (int i = 0; i < objects.size(); ++i) {
-        LevelObject::Type type = objects[i].type;
-        int num = ++typeCounter[type];
-        std::string label = std::string(TypeToString(type)) + " " + std::to_string(num);
+        std::string label;
+        if (objects[i].kind == SceneObject::ObjectKind::Light) {
+            if (objects[i].lightType == SceneObject::LightType::Point)
+                label = "Point Light";
+            else if (objects[i].lightType == SceneObject::LightType::Directional)
+                label = "Directional Light";
+            else
+                label = "Light";
+        } else {
+            label = TypeToString(objects[i].type);
+        }
+        int num = ++typeCounter[label];
+        label += " " + std::to_string(num);
         bool selected = (selectedIndex == i);
         if (ImGui::Selectable(label.c_str(), selected)) {
             selectedIndex = i;
@@ -128,6 +140,23 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
                 scene.AddObject(LevelObject::Plane);
                 selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
             }
+            if (ImGui::MenuItem("Point Light")) {
+                SceneObject light(LevelObject::Cube, glm::vec3(0,2,0), 0, glm::vec3(0,1,0), glm::vec3(0.2f), nullptr);
+                light.kind = SceneObject::ObjectKind::Light;
+                light.lightType = SceneObject::LightType::Point;
+                light.color = glm::vec3(1,1,1);
+                scene.GetObjects().push_back(light);
+                selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
+            }
+            if (ImGui::MenuItem("Directional Light")) {
+                SceneObject light(LevelObject::Cube, glm::vec3(0,5,0), 0, glm::vec3(0,1,0), glm::vec3(0.2f), nullptr);
+                light.kind = SceneObject::ObjectKind::Light;
+                light.lightType = SceneObject::LightType::Directional;
+                light.color = glm::vec3(1,1,1);
+                light.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+                scene.GetObjects().push_back(light);
+                selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
+            }
             ImGui::EndMenu();
         }
         ImGui::EndPopup();
@@ -140,33 +169,50 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
     ImGui::Begin("Inspector");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
-        ImGui::Text("Typ: %s", TypeToString(obj.type));
+        // Typ-Text
+        ImGui::Text("Typ: %s", obj.kind == SceneObject::ObjectKind::Light
+                               ? (obj.lightType == SceneObject::LightType::Point ? "Point Light" : "Directional Light")
+                               : TypeToString(obj.type));
         bool changed = false;
         changed |= ImGui::DragFloat3("Position", &obj.position.x, 0.05f);
         changed |= ImGui::DragFloat("Rotation", &obj.rotationAngle, 1.0f, -360.0f, 360.0f);
         changed |= ImGui::DragFloat3("Rotationsachse", &obj.rotationAxis.x, 0.05f);
         changed |= ImGui::DragFloat3("Skalierung", &obj.scale.x, 0.05f, 0.01f, 100.0f);
-        if (changed) {
-            scene.UpdateScene(selectedIndex, obj);
-        }
 
-        static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg", "resources/images/container2.png", "resources/images/container2_specular.png" };
-        static int currentTexture = 0;
-        auto* mesh = obj.mesh;
+        if (obj.kind == SceneObject::ObjectKind::Light) {
+            changed |= ImGui::ColorEdit3("Farbe", &obj.color.x);
+            if (obj.lightType == SceneObject::LightType::Point) {
+                changed |= ImGui::DragFloat("Konstant", &obj.constant, 0.01f, 0.0f, 10.0f);
+                changed |= ImGui::DragFloat("Linear", &obj.linear, 0.01f, 0.0f, 1.0f);
+                changed |= ImGui::DragFloat("Quadratisch", &obj.quadratic, 0.01f, 0.0f, 1.0f);
+            }
+            if (obj.lightType == SceneObject::LightType::Directional) {
+                changed |= ImGui::DragFloat3("Richtung", &obj.direction.x, 0.05f, -1.0f, 1.0f);
+            }
+        } else if (obj.mesh) {
+            // Nur für Meshes!
+            static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg", "resources/images/container2.png", "resources/images/container2_specular.png" };
+            static int currentTexture = 0;
+            auto* mesh = obj.mesh;
 
-        const char* currentTexturePath = nullptr;
-        for (int i = 0; i < IM_ARRAYSIZE(textureOptions); ++i) {
-            if (ResourceManager::GetTexture(textureOptions[i]) == mesh->GetTextureID()) {
-                currentTexture = i;
-                currentTexturePath = textureOptions[i];
-                break;
+            const char* currentTexturePath = nullptr;
+            for (int i = 0; i < IM_ARRAYSIZE(textureOptions); ++i) {
+                if (ResourceManager::GetTexture(textureOptions[i]) == mesh->GetTextureID()) {
+                    currentTexture = i;
+                    currentTexturePath = textureOptions[i];
+                    break;
+                }
+            }
+            if (!currentTexturePath) currentTexturePath = "Unbekannt";
+
+            ImGui::Text("Aktuelle Textur: %s", currentTexturePath);
+            if (ImGui::Combo("Textur wählen", &currentTexture, textureOptions, IM_ARRAYSIZE(textureOptions))) {
+                mesh->SetTexture(textureOptions[currentTexture]);
             }
         }
-        if (!currentTexturePath) currentTexturePath = "Unbekannt";
 
-        ImGui::Text("Aktuelle Textur: %s", currentTexturePath);
-        if (ImGui::Combo("Textur wählen", &currentTexture, textureOptions, IM_ARRAYSIZE(textureOptions))) {
-            mesh->SetTexture(textureOptions[currentTexture]);
+        if (changed) {
+            scene.UpdateScene(selectedIndex, obj);
         }
     } else {
         ImGui::Text("Kein Objekt vorhanden.");
