@@ -89,6 +89,15 @@ void Mesh::Bind() const {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
     }
+
+    unsigned int diffuseMap = ResourceManager::GetTexture("resources/images/container2.png");
+    unsigned int specularMap = ResourceManager::GetTexture("resources/images/container2_specular.png");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMap);
 }
 void Mesh::Unbind() const { glBindVertexArray(0); }
 void Mesh::Draw() const { glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0); }

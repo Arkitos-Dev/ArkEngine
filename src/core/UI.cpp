@@ -150,7 +150,7 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
             scene.UpdateScene(selectedIndex, obj);
         }
 
-        static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg" };
+        static const char* textureOptions[] = { "resources/images/awesomeface.png", "resources/images/container.jpg", "resources/images/container2.png", "resources/images/container2_specular.png" };
         static int currentTexture = 0;
         auto* mesh = obj.mesh;
 

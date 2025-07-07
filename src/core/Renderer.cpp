@@ -179,19 +179,24 @@ void Renderer::Render() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
 
-        // 2. Level-Meshes rendern
         shader->Use();
         shader->SetInt("texture1", 0);
         shader->SetInt("texture2", 1);
         shader->SetMat4("projection", projection);
         shader->SetMat4("view", camera.GetViewMatrix());
-        shader->SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         shader->SetVec3("lightPos", lightPos);
         shader->SetVec3("viewPos", camera.position);
         shader->SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
         shader->SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
         shader->SetVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
         shader->SetFloat("material.shininess", 32.0f);
+        shader->SetVec3("light.ambient",  glm::vec3(0.1f, 0.1f, 0.1f));
+        shader->SetVec3("light.diffuse",  glm::vec3(0.5f, 0.0f, 1.0f));
+        shader->SetVec3("light.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        shader->SetInt("material.diffuse", 0);
+
+        shader->SetInt("material.diffuse", 0);
+        shader->SetInt("material.specular", 1);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
