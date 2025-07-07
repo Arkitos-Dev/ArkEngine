@@ -188,6 +188,10 @@ void Renderer::Render() {
         shader->SetVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
         shader->SetVec3("lightPos", lightPos);
         shader->SetVec3("viewPos", camera.position);
+        shader->SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+        shader->SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+        shader->SetVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        shader->SetFloat("material.shininess", 32.0f);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
