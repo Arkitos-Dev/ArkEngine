@@ -14,7 +14,7 @@ void ArkEngine::Run() {
 
     Camera camera(window.GetWindow(), true);
 
-    Shader* shader = ResourceManager::GetShader("shaders/firstVert.vert", "shaders/firstFrag.frag");
+    Shader* shader = ResourceManager::GetShader("shaders/StandardLit.vert", "shaders/StandardLit.frag");
 
     Level level;
     level.Load("level.bin");
