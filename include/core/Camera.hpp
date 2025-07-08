@@ -27,6 +27,8 @@ public:
     void UpdateViewMatrix();
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix(float aspect) const;
+    float GetNear() const { return nearPlane; }
+    float GetFar()  const { return farPlane;  }
     void Movement(GLFWwindow* window, float deltaTime);
     static void mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos);
     void mouse_callback(GLFWwindow* window, double xpos, double ypos);

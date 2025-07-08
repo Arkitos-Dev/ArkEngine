@@ -16,6 +16,9 @@ Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
+    gridShader = new Shader("shaders/WorldGrid.vert", "shaders/WorldGrid.frag");
+    gridPlane = new Plane(nullptr);
+    gridPlane->SetScale(glm::vec3(10,1,10));
 }
 
 void Renderer::Input() {
@@ -30,15 +33,13 @@ void Renderer::Input() {
                 glfwGetCursorPos(window.GetWindow(), &xpos, &ypos);
                 camera.lastX = xpos;
                 camera.lastY = ypos;
-                camera.firstMouse = true; // <-- Hinzufügen!
+                camera.firstMouse = true;
             }
         }
         escPressedLastFrame = true;
     } else {
         escPressedLastFrame = false;
     }
-
-    // Bewegung und Kamera nur wenn nicht pausiert
     if (!paused) {
         camera.Movement(window.GetWindow(), deltaTime);
     }
@@ -209,6 +210,21 @@ void Renderer::Render() {
         int width, height;
         glfwGetFramebufferSize(window.GetWindow(), &width, &height);
         float aspect = static_cast<float>(width) / static_cast<float>(height);
+
+        gridShader->Use();
+        gridShader->SetMat4("view.view", camera.GetViewMatrix());
+        gridShader->SetMat4("view.proj", camera.GetProjectionMatrix(aspect));
+        gridShader->SetVec3("view.pos", camera.position);
+// Diese vier Zeilen ergänzen:
+        gridShader->SetMat4("fragView", camera.GetViewMatrix());
+        gridShader->SetMat4("fragProj", camera.GetProjectionMatrix(aspect));
+        gridShader->SetFloat("near", camera.GetNear()); // oder camera.GetNear() je nach Implementierung
+        gridShader->SetFloat("far", camera.GetFar());   // oder camera.GetFar()
+
+        // Nach dem Setzen der Grid-Uniforms:
+        gridPlane->Bind();
+        gridPlane->Draw();
+        gridPlane->Unbind();
 
         shader->Use();
         SetProjectionMatrix(camera.GetProjectionMatrix(aspect), camera.GetViewMatrix());

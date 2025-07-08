@@ -36,6 +36,20 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(stb)
 
+# Assimp-Optionen setzen (Tools/Tests deaktivieren, Zlib aktivieren)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+
+# Assimp holen
+FetchContent_Declare(
+        assimp
+        GIT_REPOSITORY https://github.com/assimp/assimp.git
+        GIT_TAG v3.1.1
+)
+FetchContent_MakeAvailable(assimp)
+
 set(IMGUI_SOURCES
         external/imgui/imgui.cpp
         external/imgui/imgui_draw.cpp
@@ -52,6 +66,7 @@ target_include_directories(imgui PUBLIC
         external/imgui/backends
         ${glfw_SOURCE_DIR}/include
 )
+
 
 add_executable(3DRenderer
         src/main.cpp
@@ -72,6 +87,7 @@ target_include_directories(3DRenderer PRIVATE
         ${glfw_SOURCE_DIR}/include
         ${glm_SOURCE_DIR}
         ${stb_SOURCE_DIR}
+        ${assimp_SOURCE_DIR}/include
 )
 
 # Link libraries
@@ -82,6 +98,7 @@ target_link_libraries(3DRenderer
         stb_image
         ${OPENGL_gl_LIBRARY}
         imgui
+        assimp
 )
 
 # On some systems, you may need to link OpenGL manually

@@ -9,9 +9,10 @@
 #include "Shader.hpp"
 #include "Scene.hpp"
 #include "../objects/Cube.hpp"
-#include "../../include/objects/Light.hpp"
-#include "../../include/objects/PointLight.hpp"
-#include "../../include/objects/DirectionalLight.hpp"
+#include "../objects/Light.hpp"
+#include "../objects/PointLight.hpp"
+#include "../objects/DirectionalLight.hpp"
+#include "../objects/Plane.hpp"
 #include "Camera.hpp"
 #include "UI.hpp"
 
@@ -57,6 +58,8 @@ private:
     Shader* shader;
     Camera& camera;
     UI& ui;
+    Shader* gridShader = nullptr;
+    Plane* gridPlane = nullptr;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP
