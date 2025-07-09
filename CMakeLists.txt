@@ -80,6 +80,8 @@ add_executable(3DRenderer
         src/objects/Level.cpp
         src/core/ResourceManager.cpp
         src/core/ArkEngine.cpp
+        src/objects/MeshNew.cpp
+        src/objects/Model.cpp
 )
 
 # Include directories

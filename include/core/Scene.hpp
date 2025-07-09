@@ -9,49 +9,34 @@
 #include "Shader.hpp"
 #include "glm/glm.hpp"
 
-// SceneObject mit Light-Unterstützung
 struct SceneObject {
     enum class ObjectKind { Mesh, Light };
     ObjectKind kind = ObjectKind::Mesh;
-    LevelObject::Type type;
-    glm::vec3 position;
-    float rotationAngle = 0.0f;
-    glm::vec3 rotationAxis = {0,1,0};
-    glm::vec3 scale = {1,1,1};
-    Mesh* mesh = nullptr;
-    Shader* shader = nullptr;
 
-    // Für Lichtobjekte:
+    // Gemeinsame Felder
+    glm::vec3 position{0,0,0};
+    float rotationAngle = 0.0f;
+    glm::vec3 rotationAxis{0,1,0};
+    glm::vec3 scale{1,1,1};
+
+    // Mesh-spezifisch
+    LevelObject::Type type = LevelObject::Cube;
+    Mesh* mesh = nullptr;
+
+    // Light-spezifisch
     enum class LightType { Directional, Point, Spot };
-    LightType lightType;
-    glm::vec3 color = {1,1,1};
-    glm::vec3 direction = {0,-1,0};
-    // Attenuation für Point/Spot
+    LightType lightType = LightType::Point;
+    glm::vec3 color{1,1,1};
+    glm::vec3 direction{0,-1,0};
     float constant = 1.0f, linear = 0.09f, quadratic = 0.032f;
-    // Spot-spezifisch
     float cutOff = 0.0f, outerCutOff = 0.0f;
 
-    // In Scene.hpp, innerhalb von struct SceneObject:
-    SceneObject(LevelObject::Type type,
-                const glm::vec3& position,
-                float rotationAngle,
-                const glm::vec3& rotationAxis,
-                const glm::vec3& scale,
-                Mesh* mesh)
-            : kind(ObjectKind::Mesh),
-              type(type),
-              position(position),
-              rotationAngle(rotationAngle),
-              rotationAxis(rotationAxis),
-              scale(scale),
-              mesh(mesh),
-              shader(nullptr),
-              lightType(LightType::Point),
-              color(1,1,1),
-              direction(0,-1,0),
-              constant(1.0f), linear(0.09f), quadratic(0.032f),
-              cutOff(0.0f), outerCutOff(0.0f)
-    {}
+    // Konstruktoren für Mesh und Light
+    SceneObject(LevelObject::Type t, const glm::vec3& pos, float rot, const glm::vec3& axis, const glm::vec3& sc, Mesh* m)
+            : kind(ObjectKind::Mesh), position(pos), rotationAngle(rot), rotationAxis(axis), scale(sc), type(t), mesh(m) {}
+
+    SceneObject(LightType lt, const glm::vec3& pos, const glm::vec3& col, const glm::vec3& dir)
+            : kind(ObjectKind::Light), position(pos), color(col), direction(dir), lightType(lt) {}
 };
 
 class Scene {

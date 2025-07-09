@@ -19,6 +19,7 @@ Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
     gridShader = new Shader("shaders/WorldGrid.vert", "shaders/WorldGrid.frag");
     gridPlane = new Plane(nullptr);
     gridPlane->SetScale(glm::vec3(10,1,10));
+    backpack = new Model("resources/model/backpack/backpack.obj");
 }
 
 void Renderer::Input() {
@@ -185,7 +186,7 @@ void Renderer::RenderMeshes(){
     for (auto& [prototype, matrices] : meshGroups) {
         if (!matrices.empty()) {
             prototype->SetModelMatrices(matrices);
-            prototype->Bind();
+            prototype->Bind(*shader);
             prototype->DrawInstanced();
             prototype->Unbind();
         }
@@ -211,25 +212,11 @@ void Renderer::Render() {
         glfwGetFramebufferSize(window.GetWindow(), &width, &height);
         float aspect = static_cast<float>(width) / static_cast<float>(height);
 
-        gridShader->Use();
-        gridShader->SetMat4("view.view", camera.GetViewMatrix());
-        gridShader->SetMat4("view.proj", camera.GetProjectionMatrix(aspect));
-        gridShader->SetVec3("view.pos", camera.position);
-// Diese vier Zeilen ergänzen:
-        gridShader->SetMat4("fragView", camera.GetViewMatrix());
-        gridShader->SetMat4("fragProj", camera.GetProjectionMatrix(aspect));
-        gridShader->SetFloat("near", camera.GetNear()); // oder camera.GetNear() je nach Implementierung
-        gridShader->SetFloat("far", camera.GetFar());   // oder camera.GetFar()
-
-        // Nach dem Setzen der Grid-Uniforms:
-        gridPlane->Bind();
-        gridPlane->Draw();
-        gridPlane->Unbind();
-
         shader->Use();
         SetProjectionMatrix(camera.GetProjectionMatrix(aspect), camera.GetViewMatrix());
         SetMaterials();
         SetLighting();
+        backpack->Draw(*shader);
         RenderMeshes();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

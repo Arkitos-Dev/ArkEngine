@@ -13,6 +13,7 @@
 #include "../objects/PointLight.hpp"
 #include "../objects/DirectionalLight.hpp"
 #include "../objects/Plane.hpp"
+#include "../objects/Model.hpp"
 #include "Camera.hpp"
 #include "UI.hpp"
 
@@ -60,6 +61,7 @@ private:
     UI& ui;
     Shader* gridShader = nullptr;
     Plane* gridPlane = nullptr;
+    Model* backpack = nullptr;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

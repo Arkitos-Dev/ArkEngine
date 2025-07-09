@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/quaternion.hpp"
+#include "../core/Shader.hpp"
 #include <vector>
 #include <string>
 
@@ -33,7 +34,7 @@ public:
     unsigned int GetTextureID() const { return texture1; }
 
     glm::mat4 GetModelMatrix() const { return model; }
-    void Bind() const;
+    void Bind(Shader& shader) const;
     void Unbind() const;
     void Draw() const;
     void DrawInstanced() const;

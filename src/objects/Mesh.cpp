@@ -79,26 +79,23 @@ void Mesh::DrawInstanced() const {
     glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instanceCount));
 }
 
-void Mesh::Bind() const {
+void Mesh::Bind(Shader& shader) const {
     glBindVertexArray(VAO);
+
+    // Diffuse Map auf GL_TEXTURE0
     if (texture1) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
+        shader.SetInt("material.texture_diffuse1", 0);
     }
+    // Specular Map auf GL_TEXTURE1
     if (texture2) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
+        shader.SetInt("material.texture_specular1", 1);
     }
-
-    unsigned int diffuseMap = ResourceManager::GetTexture("resources/images/container2.png");
-    unsigned int specularMap = ResourceManager::GetTexture("resources/images/container2_specular.png");
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, specularMap);
 }
+
 void Mesh::Unbind() const { glBindVertexArray(0); }
 void Mesh::Draw() const { glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indexCount), GL_UNSIGNED_INT, 0); }
 
