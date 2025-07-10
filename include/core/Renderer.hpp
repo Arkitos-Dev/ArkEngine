@@ -19,7 +19,7 @@
 
 class Renderer {
 public:
-    Renderer(Window& window, Scene& scene, Shader* shader, Camera& cam, UI& ui);
+    Renderer(Window& window, Scene& scene, std::shared_ptr<Shader> shader, Camera& cam, UI& ui);
     void Render();
 private:
     double lastTime = 0.0;
@@ -54,12 +54,9 @@ private:
 
     Window& window;
     Scene& scene;
-    Shader* shader;
+    std::shared_ptr<Shader> shader;
     Camera& camera;
     UI& ui;
-    Shader* gridShader = nullptr;
-    Plane* gridPlane = nullptr;
-    Model* backpack = nullptr;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

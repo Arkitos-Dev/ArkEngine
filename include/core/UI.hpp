@@ -8,6 +8,7 @@
 #include "Scene.hpp"
 #include "../objects/Mesh.hpp"
 #include "../objects/PointLight.hpp"
+#include "../objects/DirectionalLight.hpp"
 
 class UI {
 public:

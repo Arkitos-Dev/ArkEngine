@@ -1,13 +1,13 @@
 //
 // Created by Anton on 05.07.2025.
 //
-
 #include "../../include/core/ResourceManager.hpp"
 #include "stb_image.h"
 #include "glad/glad.h"
 
 std::map<std::string, unsigned int> ResourceManager::textures;
-std::map<std::string, Shader*> ResourceManager::shaders;
+std::map<std::string, std::shared_ptr<Shader>> ResourceManager::shaders;
+std::map<std::string, std::shared_ptr<Model>> ResourceManager::models;
 
 unsigned int ResourceManager::GetTexture(const std::string& path) {
     if (textures.count(path)) return textures[path];
@@ -33,21 +33,32 @@ unsigned int ResourceManager::GetTexture(const std::string& path) {
     return tex;
 }
 
-void ResourceManager::Clear() {
+void ResourceManager::ClearTextures() {
     for (auto& [_, tex] : textures) glDeleteTextures(1, &tex);
     textures.clear();
 }
 
-Shader* ResourceManager::GetShader(const std::string& vertexPath, const std::string& fragmentPath) {
+std::shared_ptr<Shader> ResourceManager::GetShader(const std::string& vertexPath, const std::string& fragmentPath) {
     std::string key = vertexPath + "|" + fragmentPath;
     auto it = shaders.find(key);
     if (it != shaders.end()) return it->second;
-    Shader* shader = new Shader(vertexPath.c_str(), fragmentPath.c_str());
+    auto shader = std::make_shared<Shader>(vertexPath.c_str(), fragmentPath.c_str());
     shaders[key] = shader;
     return shader;
 }
 
 void ResourceManager::ClearShaders() {
-    for (auto& [_, shader] : shaders) delete shader;
     shaders.clear();
+}
+
+std::shared_ptr<Model> ResourceManager::GetModel(const std::string& path) {
+    auto it = models.find(path);
+    if (it != models.end()) return it->second;
+    auto model = std::make_shared<Model>(path);
+    models[path] = model;
+    return model;
+}
+
+void ResourceManager::ClearModels() {
+    models.clear();
 }

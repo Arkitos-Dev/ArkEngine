@@ -76,7 +76,6 @@ add_executable(3DRenderer
         src/core/Renderer.cpp
         src/core/Camera.cpp
         src/core/UI.cpp
-        src/objects/Level.cpp
         src/core/ResourceManager.cpp
         src/core/ArkEngine.cpp
         src/objects/Mesh.cpp

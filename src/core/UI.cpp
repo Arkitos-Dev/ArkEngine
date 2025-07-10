@@ -124,8 +124,12 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
                 scene.AddObject(std::make_unique<Plane>());
                 selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
             }
-            if (ImGui::MenuItem("Light")) {
+            if (ImGui::MenuItem("PointLight")) {
                 scene.AddObject(std::make_unique<PointLight>());
+                selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
+            }
+            if (ImGui::MenuItem("Directional Light")) {
+                scene.AddObject(std::make_unique<DirectionalLight>());
                 selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
             }
             ImGui::EndMenu();
@@ -147,19 +151,13 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
         if (ImGui::DragFloat3("Position", &pos.x, 0.05f))
             obj->SetPosition(pos);
 
-        // Quaternion in Winkel + Achse umwandeln
+
         glm::quat rot = obj->GetRotation();
-        float angleDeg = glm::degrees(glm::angle(rot));
-        glm::vec3 axis = glm::axis(rot);
-
-        // UI für Rotation
-        bool changed = false;
-        changed |= ImGui::DragFloat("Rotation (Grad)", &angleDeg, 1.0f, -360.0f, 360.0f);
-        changed |= ImGui::DragFloat3("Rotationsachse", &axis.x, 0.05f);
-
-        if (changed) {
-            if (glm::length(axis) < 1e-4f) axis = glm::vec3(0,1,0); // Fallback
-            obj->SetRotation(angleDeg, axis);
+        float quat[4] = { rot.w, rot.x, rot.y, rot.z };
+        if (ImGui::DragFloat4("Rotation", quat, 0.01f)) {
+            glm::quat newRot(quat[0], quat[1], quat[2], quat[3]);
+            if (glm::length(newRot) > 1e-4f)
+                obj->SetRotation(glm::normalize(newRot));
         }
 
         glm::vec3 scale = obj->GetScale();

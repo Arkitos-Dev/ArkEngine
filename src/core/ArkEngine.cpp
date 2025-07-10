@@ -14,9 +14,12 @@ void ArkEngine::Run() {
 
     Camera camera(window.GetWindow(), true);
 
-    Shader* shader = ResourceManager::GetShader("shaders/StandardLit.vert", "shaders/StandardLit.frag");
+    auto shader = ResourceManager::GetShader("shaders/StandardLit.vert", "shaders/StandardLit.frag");
 
     Scene scene;
+
+    auto colonne = std::make_unique<Model>("resources/model/backpack/backpack.obj");
+    scene.AddObject(std::unique_ptr<GameObject>(std::move(colonne)));
 
     UI ui(window.GetWindow());
 

@@ -10,13 +10,13 @@
 #include <thread>
 #include <map>
 
-Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
+Renderer::Renderer(Window& win, Scene& sc, std::shared_ptr<Shader> sh, Camera& cam, UI& ui)
         : window(win), scene(sc), shader(sh), camera(cam), ui(ui) {
     camera.paused = &paused;
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
-    backpack = new Model("resources/model/backpack/backpack.obj");
+    auto backpack = new Model("resources/model/backpack/backpack.obj");
 }
 
 void Renderer::Input() {
@@ -187,13 +187,18 @@ void Renderer::RenderMeshes() {
     std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
     for (auto& obj : scene.GetObjects()) {
         Mesh* mesh = nullptr;
-        // Prüfe, ob das Objekt ein Mesh ist oder ein Mesh besitzt
         if (auto* asMesh = dynamic_cast<Mesh*>(obj.get())) {
             mesh = asMesh;
         } else if (auto* cube = dynamic_cast<Cube*>(obj.get())) {
             mesh = cube->GetMesh();
         } else if (auto* plane = dynamic_cast<Plane*>(obj.get())) {
             mesh = plane->GetMesh();
+        } else if (auto* model = dynamic_cast<Model*>(obj.get())) {
+            // Alle Meshes des Models rendern
+            for (auto* modelMesh : model->GetMeshes()) {
+                meshGroups[modelMesh].push_back(ComputeModelMatrix(*model));
+            }
+            continue; // Model ist kein Mesh, daher überspringen
         }
         if (mesh) {
             meshGroups[mesh].push_back(ComputeModelMatrix(*obj));
@@ -230,10 +235,9 @@ void Renderer::Render() {
         SetProjectionMatrix(camera.GetProjectionMatrix(aspect), camera.GetViewMatrix());
         SetMaterials();
         SetLighting(*shader);
-        backpack->Draw(*shader);
         RenderMeshes();
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         UpdateMeshCache();

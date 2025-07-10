@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <fstream>
 #include "Mesh.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -12,7 +13,7 @@
 #include <iostream>
 #include "../core/ResourceManager.hpp"
 
-class Model
+class Model : public GameObject
 {
 public:
     Model(const std::string& path)
@@ -20,8 +21,14 @@ public:
         loadModel(path);
     }
     void Draw(Shader &shader);
+    std::vector<Mesh*> GetMeshes() {
+        std::vector<Mesh*> result;
+        for (auto& mesh : meshes) {
+            result.push_back(&mesh);
+        }
+        return result;
+    }
 private:
-    // model data
     std::vector<Mesh> meshes;
     std::string directory;
 

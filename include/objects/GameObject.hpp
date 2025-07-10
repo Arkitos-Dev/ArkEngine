@@ -1,10 +1,9 @@
-//
-// Created by Anton on 10.07.2025.
-//
 #pragma once
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include <ostream>
+#include <istream>
 
 class GameObject {
 public:

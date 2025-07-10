@@ -1,4 +1,3 @@
-// Scene.hpp
 #pragma once
 #include <vector>
 #include <memory>
@@ -12,6 +11,8 @@ public:
     void AddObject(std::unique_ptr<GameObject> obj);
     void RemoveObjectAt(size_t index);
     void Clear();
+    void Save(const std::string& filename) const;
+    bool Load(const std::string& filename);
 
     std::vector<std::unique_ptr<GameObject>>& GetObjects();
     const std::vector<std::unique_ptr<GameObject>>& GetObjects() const;

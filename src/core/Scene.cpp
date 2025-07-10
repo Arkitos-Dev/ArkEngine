@@ -1,7 +1,5 @@
 #include "../../include/core/Scene.hpp"
-#include "../../include/objects/Plane.hpp"
-#include "../../include/objects/Cube.hpp"
-#include "../../include/objects/Level.hpp"
+#include <fstream>
 
 Scene::~Scene() {
     Clear();
