@@ -31,7 +31,7 @@ public:
     unsigned int VAO;
 
     MeshNew(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-    void DrawInstanced();
+    void DrawInstanced(Shader& shader);
     void SetModelMatrices(const std::vector<glm::mat4> &matrices);
 private:
     unsigned int VBO, EBO;

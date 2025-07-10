@@ -9,14 +9,14 @@ void Model::Draw(Shader &shader)
     std::vector<glm::mat4> matrices = { glm::mat4(1.0f) }; // eine Instanz, Identitätsmatrix
     for(unsigned int i = 0; i < meshes.size(); i++) {
         meshes[i].SetModelMatrices(matrices);
-        meshes[i].DrawInstanced();
+        meshes[i].DrawInstanced(shader);
     }
 }
 
 void Model::loadModel(std::string path)
 {
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate);
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {

@@ -54,7 +54,24 @@ void MeshNew::SetModelMatrices(const std::vector<glm::mat4>& matrices) {
     glBufferData(GL_ARRAY_BUFFER, instanceCount * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
 }
 
-void MeshNew::DrawInstanced() {
+void MeshNew::DrawInstanced(Shader& shader) {
+    // Vor dem Draw-Call, z.B. in MeshNew::Bind(Shader& shader)
+    unsigned int diffuseNr = 1;
+    unsigned int specularNr = 1;
+    for (unsigned int i = 0; i < textures.size(); i++)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        std::string number;
+        std::string name = textures[i].type;
+        if (name == "texture_diffuse")
+            number = std::to_string(diffuseNr++);
+        else if (name == "texture_specular")
+            number = std::to_string(specularNr++);
+        shader.SetInt(("material." + name + number).c_str(), i);
+        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+    }
+    glActiveTexture(GL_TEXTURE0); // Reset
+
     glBindVertexArray(VAO);
     glDrawElementsInstanced(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0, instanceCount);
     glBindVertexArray(0);
