@@ -2736,7 +2736,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
             for (int n = 0; n < 5; n++)
             {
                 char buf[32];
-                sprintf(buf, "Object %d", n);
+                sprintf(buf, "GameObject %d", n);
                 if (ImGui::Selectable(buf, selected == n))
                     selected = n;
             }
@@ -2753,7 +2753,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
             for (int n = 0; n < 5; n++)
             {
                 char buf[32];
-                sprintf(buf, "Object %d", n);
+                sprintf(buf, "GameObject %d", n);
                 if (ImGui::Selectable(buf, selection[n]))
                 {
                     if (!ImGui::GetIO().KeyCtrl) // Clear selection when CTRL is not held
@@ -2794,7 +2794,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                 for (int n = 0; n < ITEMS_COUNT; n++)
                 {
                     char label[64];
-                    sprintf(label, "Object %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
+                    sprintf(label, "GameObject %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
                     bool item_is_selected = selection.Contains((ImGuiID)n);
                     ImGui::SetNextItemSelectionUserData(n);
                     ImGui::Selectable(label, item_is_selected);
@@ -2834,7 +2834,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                     for (int n = clipper.DisplayStart; n < clipper.DisplayEnd; n++)
                     {
                         char label[64];
-                        sprintf(label, "Object %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
+                        sprintf(label, "GameObject %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
                         bool item_is_selected = selection.Contains((ImGuiID)n);
                         ImGui::SetNextItemSelectionUserData(n);
                         ImGui::Selectable(label, item_is_selected);
@@ -2896,7 +2896,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                 {
                     const ImGuiID item_id = items[n];
                     char label[64];
-                    sprintf(label, "Object %05u: %s", item_id, ExampleNames[item_id % IM_ARRAYSIZE(ExampleNames)]);
+                    sprintf(label, "GameObject %05u: %s", item_id, ExampleNames[item_id % IM_ARRAYSIZE(ExampleNames)]);
 
                     bool item_is_selected = selection.Contains(item_id);
                     ImGui::SetNextItemSelectionUserData(n);
@@ -2941,7 +2941,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
             ImGui::Text("Selection: %d/%d", selection.Size, ITEMS_COUNT);
             if (ImGui::BeginTable("##Basket", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter))
             {
-                ImGui::TableSetupColumn("Object");
+                ImGui::TableSetupColumn("GameObject");
                 ImGui::TableSetupColumn("Action");
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableHeadersRow();
@@ -2961,7 +2961,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         char label[64];
-                        sprintf(label, "Object %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
+                        sprintf(label, "GameObject %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
                         bool item_is_selected = selection.Contains((ImGuiID)n);
                         ImGui::SetNextItemSelectionUserData(n);
                         ImGui::Selectable(label, item_is_selected, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
@@ -3045,7 +3045,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                 for (int n = 0; n < ITEMS_COUNT; n++)
                 {
                     char label[64];
-                    sprintf(label, "Object %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
+                    sprintf(label, "GameObject %05d: %s", n, ExampleNames[n % IM_ARRAYSIZE(ExampleNames)]);
                     bool item_is_selected = selection->Contains((ImGuiID)n);
                     ImGui::SetNextItemSelectionUserData(n);
                     ImGui::Selectable(label, item_is_selected);
@@ -3335,7 +3335,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                         const int item_id = items[n];
                         const char* item_category = ExampleNames[item_id % IM_ARRAYSIZE(ExampleNames)];
                         char label[64];
-                        sprintf(label, "Object %05d: %s", item_id, item_category);
+                        sprintf(label, "GameObject %05d: %s", item_id, item_category);
 
                         // IMPORTANT: for deletion refocus to work we need object ID to be stable,
                         // aka not depend on their index in the list. Here we use our persistent item_id
@@ -3395,7 +3395,7 @@ static void DemoWindowWidgetsSelectionAndMultiSelect(ImGuiDemoWindowData* demo_d
                             const int* payload_items = (int*)payload->Data;
                             const int payload_count = (int)payload->DataSize / (int)sizeof(int);
                             if (payload_count == 1)
-                                ImGui::Text("Object %05d: %s", payload_items[0], ExampleNames[payload_items[0] % IM_ARRAYSIZE(ExampleNames)]);
+                                ImGui::Text("GameObject %05d: %s", payload_items[0], ExampleNames[payload_items[0] % IM_ARRAYSIZE(ExampleNames)]);
                             else
                                 ImGui::Text("Dragging %d objects", payload_count);
 

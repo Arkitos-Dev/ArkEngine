@@ -44,13 +44,11 @@ private:
     void DeleteViewportFBO();
     void UpdateFPS();
     void LimitFPS(double frameStart, double targetFPS);
-    void SetUpShaders();
-    void lightVertices();
     void UpdateMeshCache();
     void RenderMeshes();
     void SetProjectionMatrix(const glm::mat4& projection, const glm::mat4& view);
     void SetMaterials();
-    void SetLighting();
+    void SetLighting(Shader& shader);
 
     void Input();
 

@@ -16,9 +16,6 @@ Renderer::Renderer(Window& win, Scene& sc, Shader* sh, Camera& cam, UI& ui)
     glEnable(GL_DEPTH_TEST);
     deltaTime = 0.0;
     lastFrameTime = glfwGetTime();
-    gridShader = new Shader("shaders/WorldGrid.vert", "shaders/WorldGrid.frag");
-    gridPlane = new Plane(nullptr);
-    gridPlane->SetScale(glm::vec3(10,1,10));
     backpack = new Model("resources/model/backpack/backpack.obj");
 }
 
@@ -106,11 +103,24 @@ void Renderer::DeleteViewportFBO() {
     viewportFBO = 0;
 }
 
+glm::mat4 ComputeModelMatrix(const GameObject& obj) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, obj.GetPosition());
+    model *= glm::mat4_cast(obj.GetRotation());
+    model = glm::scale(model, obj.GetScale());
+    return model;
+}
+
 void Renderer::UpdateMeshCache() {
     if (!meshesDirty) return;
     cachedMeshes.clear();
     for (auto& obj : scene.GetObjects()) {
-        if (obj.mesh) cachedMeshes.push_back(obj.mesh);
+        if (auto* cube = dynamic_cast<Cube*>(obj.get())) {
+            if (cube->GetMesh()) cachedMeshes.push_back(cube->GetMesh());
+        } else if (auto* plane = dynamic_cast<Plane*>(obj.get())) {
+            if (plane->GetMesh()) cachedMeshes.push_back(plane->GetMesh());
+        }
+        // ggf. weitere Typen ergänzen
     }
     meshesDirty = false;
 }
@@ -127,68 +137,72 @@ void Renderer::SetMaterials() {
     shader->SetInt("material.specular", 1);
 }
 
-void Renderer::SetLighting(){
+void Renderer::SetLighting(Shader& shader) {
     int pointLightIdx = 0;
+    int numPointLights = 0;
+    bool hasDirLight = false;
+
+    std::vector<Light*> pointLights;
+    Light* dirLight = nullptr;
+
     for (const auto& obj : scene.GetObjects()) {
-        if (obj.kind == SceneObject::ObjectKind::Light) {
-            if (obj.lightType == SceneObject::LightType::Point && pointLightIdx < 4) {
-                PointLight point;
-                point.position = obj.position;
-                point.color = obj.color;
-                point.constant = obj.constant;
-                point.linear = obj.linear;
-                point.quadratic = obj.quadratic;
-                point.UploadToShader(shader, pointLightIdx++);
-            } else if (obj.lightType == SceneObject::LightType::Directional) {
-                DirectionalLight dir;
-                dir.direction = obj.direction;
-                dir.color = obj.color;
-                dir.UploadToShader(shader);
+        if (auto* light = dynamic_cast<Light*>(obj.get())) {
+            if (light->type == Light::Type::Point && pointLightIdx < 16) {
+                pointLights.push_back(light);
+                ++pointLightIdx;
+            } else if (light->type == Light::Type::Directional && !dirLight) {
+                dirLight = light;
             }
         }
     }
+    numPointLights = static_cast<int>(pointLights.size());
 
-    int numPointLights = 0;
-    for (const auto& obj : scene.GetObjects()) {
-        if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Point)
-            ++numPointLights;
+    for (int i = 0; i < numPointLights; ++i) {
+        auto* light = pointLights[i];
+        shader.SetVec3("pointLights[" + std::to_string(i) + "].position", light->GetPosition());
+        shader.SetVec3("pointLights[" + std::to_string(i) + "].ambient",  light->color * 0.1f);
+        shader.SetVec3("pointLights[" + std::to_string(i) + "].diffuse",  light->color * 0.8f);
+        shader.SetVec3("pointLights[" + std::to_string(i) + "].specular", light->color * 1.0f);
+        shader.SetFloat("pointLights[" + std::to_string(i) + "].constant",  light->constant);
+        shader.SetFloat("pointLights[" + std::to_string(i) + "].linear",    light->linear);
+        shader.SetFloat("pointLights[" + std::to_string(i) + "].quadratic", light->quadratic);
     }
-    shader->SetInt("numPointLights", numPointLights);
+    shader.SetInt("numPointLights", numPointLights);
 
-    // Nach dem Zählen/Setzen der Lichter:
-    bool hasDirLight = false;
-    for (const auto& obj : scene.GetObjects()) {
-        if (obj.kind == SceneObject::ObjectKind::Light && obj.lightType == SceneObject::LightType::Directional) {
-            shader->SetVec3("dirLight.direction", obj.direction);
-            shader->SetVec3("dirLight.ambient",  obj.color * 0.1f);
-            shader->SetVec3("dirLight.diffuse",  obj.color * 0.8f);
-            shader->SetVec3("dirLight.specular", obj.color * 1.0f);
-            hasDirLight = true;
-        }
-    }
-    if (!hasDirLight) {
-        // Setze alle Werte auf 0, damit das Licht "aus" ist
-        shader->SetVec3("dirLight.direction", glm::vec3(0,0,0));
-        shader->SetVec3("dirLight.ambient",  glm::vec3(0,0,0));
-        shader->SetVec3("dirLight.diffuse",  glm::vec3(0,0,0));
-        shader->SetVec3("dirLight.specular", glm::vec3(0,0,0));
+    if (dirLight) {
+        shader.SetVec3("dirLight.direction", dirLight->direction);
+        shader.SetVec3("dirLight.ambient",  dirLight->color * 0.1f);
+        shader.SetVec3("dirLight.diffuse",  dirLight->color * 0.8f);
+        shader.SetVec3("dirLight.specular", dirLight->color * 1.0f);
+        hasDirLight = true;
+    } else {
+        shader.SetVec3("dirLight.direction", glm::vec3(0,0,0));
+        shader.SetVec3("dirLight.ambient",  glm::vec3(0,0,0));
+        shader.SetVec3("dirLight.diffuse",  glm::vec3(0,0,0));
+        shader.SetVec3("dirLight.specular", glm::vec3(0,0,0));
     }
 }
 
-void Renderer::RenderMeshes(){
+void Renderer::RenderMeshes() {
     std::map<Mesh*, std::vector<glm::mat4>> meshGroups;
-    for (auto& sceneObj : scene.GetObjects()) {
-        if (sceneObj.mesh) {
-            meshGroups[sceneObj.mesh->GetPrototype()].push_back(sceneObj.mesh->GetModelMatrix());
+    for (auto& obj : scene.GetObjects()) {
+        Mesh* mesh = nullptr;
+        // Prüfe, ob das Objekt ein Mesh ist oder ein Mesh besitzt
+        if (auto* asMesh = dynamic_cast<Mesh*>(obj.get())) {
+            mesh = asMesh;
+        } else if (auto* cube = dynamic_cast<Cube*>(obj.get())) {
+            mesh = cube->GetMesh();
+        } else if (auto* plane = dynamic_cast<Plane*>(obj.get())) {
+            mesh = plane->GetMesh();
+        }
+        if (mesh) {
+            meshGroups[mesh].push_back(ComputeModelMatrix(*obj));
         }
     }
-
-    for (auto& [prototype, matrices] : meshGroups) {
+    for (auto& [mesh, matrices] : meshGroups) {
         if (!matrices.empty()) {
-            prototype->SetModelMatrices(matrices);
-            prototype->Bind(*shader);
-            prototype->DrawInstanced();
-            prototype->Unbind();
+            mesh->SetModelMatrices(matrices);
+            mesh->DrawInstanced(*shader);
         }
     }
 }
@@ -215,7 +229,7 @@ void Renderer::Render() {
         shader->Use();
         SetProjectionMatrix(camera.GetProjectionMatrix(aspect), camera.GetViewMatrix());
         SetMaterials();
-        SetLighting();
+        SetLighting(*shader);
         backpack->Draw(*shader);
         RenderMeshes();
 

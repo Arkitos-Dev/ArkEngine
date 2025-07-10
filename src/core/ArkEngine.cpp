@@ -16,11 +16,7 @@ void ArkEngine::Run() {
 
     Shader* shader = ResourceManager::GetShader("shaders/StandardLit.vert", "shaders/StandardLit.frag");
 
-    Level level;
-    level.Load("level.bin");
-
     Scene scene;
-    scene.FromLevel(level);
 
     UI ui(window.GetWindow());
 

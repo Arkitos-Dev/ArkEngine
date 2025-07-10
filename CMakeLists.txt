@@ -72,7 +72,6 @@ add_executable(3DRenderer
         src/main.cpp
         src/core/Window.cpp
         src/core/Shader.cpp
-        src/objects/Mesh.cpp
         src/core/Scene.cpp
         src/core/Renderer.cpp
         src/core/Camera.cpp
@@ -80,7 +79,7 @@ add_executable(3DRenderer
         src/objects/Level.cpp
         src/core/ResourceManager.cpp
         src/core/ArkEngine.cpp
-        src/objects/MeshNew.cpp
+        src/objects/Mesh.cpp
         src/objects/Model.cpp
 )
 

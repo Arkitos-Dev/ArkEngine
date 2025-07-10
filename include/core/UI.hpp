@@ -4,10 +4,10 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
 #include <vector>
-#include "../objects/Mesh.hpp"
 #include <map>
 #include "Scene.hpp"
-#include "ResourceManager.hpp"
+#include "../objects/Mesh.hpp"
+#include "../objects/PointLight.hpp"
 
 class UI {
 public:
@@ -19,7 +19,6 @@ public:
     void Draw(const std::vector<Mesh*>& meshes, Scene& scene);
     ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight);
 
-    static const char* TypeToString(LevelObject::Type type);
 private:
     void DrawMainMenu(Scene& scene);
     void DrawSceneList(Scene& scene, int& selectedIndex);
