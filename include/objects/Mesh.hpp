@@ -23,7 +23,7 @@ struct Texture {
     std::string path;
 };
 
-class Mesh : public GameObject {
+class Mesh {
 public:
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;

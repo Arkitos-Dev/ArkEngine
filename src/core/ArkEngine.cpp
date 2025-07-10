@@ -18,8 +18,8 @@ void ArkEngine::Run() {
 
     Scene scene;
 
-    auto colonne = std::make_unique<Model>("resources/model/backpack/backpack.obj");
-    scene.AddObject(std::unique_ptr<GameObject>(std::move(colonne)));
+    auto backpack = ResourceManager::GetModel("resources/model/backpack/backpack.obj");
+    scene.AddObject(backpack);
 
     UI ui(window.GetWindow());
 

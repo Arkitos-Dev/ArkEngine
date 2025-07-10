@@ -14,9 +14,6 @@ Renderer::Renderer(Window& win, Scene& sc, std::shared_ptr<Shader> sh, Camera& c
         : window(win), scene(sc), shader(sh), camera(cam), ui(ui) {
     camera.paused = &paused;
     glEnable(GL_DEPTH_TEST);
-    deltaTime = 0.0;
-    lastFrameTime = glfwGetTime();
-    auto backpack = new Model("resources/model/backpack/backpack.obj");
 }
 
 void Renderer::Input() {
@@ -116,11 +113,10 @@ void Renderer::UpdateMeshCache() {
     cachedMeshes.clear();
     for (auto& obj : scene.GetObjects()) {
         if (auto* cube = dynamic_cast<Cube*>(obj.get())) {
-            if (cube->GetMesh()) cachedMeshes.push_back(cube->GetMesh());
+            if (cube->GetMesh()) cachedMeshes.push_back(cube->GetMesh().get());
         } else if (auto* plane = dynamic_cast<Plane*>(obj.get())) {
-            if (plane->GetMesh()) cachedMeshes.push_back(plane->GetMesh());
+            if (plane->GetMesh()) cachedMeshes.push_back(plane->GetMesh().get());
         }
-        // ggf. weitere Typen ergänzen
     }
     meshesDirty = false;
 }
@@ -190,9 +186,9 @@ void Renderer::RenderMeshes() {
         if (auto* asMesh = dynamic_cast<Mesh*>(obj.get())) {
             mesh = asMesh;
         } else if (auto* cube = dynamic_cast<Cube*>(obj.get())) {
-            mesh = cube->GetMesh();
+            mesh = cube->GetMesh().get();
         } else if (auto* plane = dynamic_cast<Plane*>(obj.get())) {
-            mesh = plane->GetMesh();
+            mesh = plane->GetMesh().get();
         } else if (auto* model = dynamic_cast<Model*>(obj.get())) {
             // Alle Meshes des Models rendern
             for (auto* modelMesh : model->GetMeshes()) {
@@ -237,7 +233,7 @@ void Renderer::Render() {
         SetLighting(*shader);
         RenderMeshes();
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         UpdateMeshCache();

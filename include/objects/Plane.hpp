@@ -2,14 +2,37 @@
 // Created by Anton on 04.07.2025.
 //
 #pragma once
-#include "Mesh.hpp"
+#include "Shapes.hpp"
+#include "../../include/core/ResourceManager.hpp"
 
-class Plane : public Mesh {
+class Plane : public Shapes {
 public:
-    Plane(const std::vector<Texture>& textures = {})
-            : Mesh(GetVertices(), GetIndices(), textures) {}
+    Plane(const std::vector<Texture>& textures = {}) {
+        mesh = std::make_shared<Mesh>(
+                GetVertices(),
+                GetIndices(),
+                textures.empty() ? GetDefaultTextures() : textures
+        );
+    }
 
 private:
+    static std::vector<Texture> GetDefaultTextures() {
+        std::vector<Texture> textures;
+        Texture diffuse;
+        diffuse.id = ResourceManager::GetTexture("resources/images/container2.png");
+        diffuse.type = "texture_diffuse";
+        diffuse.path = "resources/images/container2.png";
+        textures.push_back(diffuse);
+
+        Texture specular;
+        specular.id = ResourceManager::GetTexture("resources/images/container2_specular.png");
+        specular.type = "texture_specular";
+        specular.path = "resources/images/container2_specular.png";
+        textures.push_back(specular);
+
+        return textures;
+    }
+
     static std::vector<Vertex> GetVertices() {
         static const float rawVertices[] = {
                 // Position         // Normal      // TexCoords

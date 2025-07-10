@@ -89,7 +89,6 @@ void Camera::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     UpdateViewMatrix();
 }
 
-// In src/Camera.cpp
 void Camera::mouse_callback_dispatch(GLFWwindow* window, double xpos, double ypos) {
     auto* camera = static_cast<Camera*>(glfwGetWindowUserPointer(window));
     if (camera)

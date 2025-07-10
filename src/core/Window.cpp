@@ -5,7 +5,6 @@
 #include "../../include/core/Window.hpp"
 #include <iostream>
 
-// C++
 Window::Window(int width, int height, const char* title) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
