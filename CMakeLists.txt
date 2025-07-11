@@ -50,6 +50,23 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(assimp)
 
+# ImGuiFileDialog holen
+FetchContent_Declare(
+        ImGuiFileDialog
+        GIT_REPOSITORY https://github.com/aiekick/ImGuiFileDialog.git
+        GIT_TAG master
+)
+FetchContent_MakeAvailable(ImGuiFileDialog)
+
+add_library(imguifiledialog STATIC
+        ${imguifiledialog_SOURCE_DIR}/ImGuiFileDialog.cpp
+)
+target_include_directories(imguifiledialog PUBLIC
+        ${imguifiledialog_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}
+)
+target_link_libraries(imguifiledialog PUBLIC imgui)
+
 set(IMGUI_SOURCES
         external/imgui/imgui.cpp
         external/imgui/imgui_draw.cpp
@@ -98,6 +115,7 @@ target_link_libraries(3DRenderer
         stb_image
         ${OPENGL_gl_LIBRARY}
         imgui
+        imguifiledialog
         assimp
 )
 

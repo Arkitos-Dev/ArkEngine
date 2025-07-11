@@ -19,9 +19,13 @@ public:
     void EndFrame();
     void Draw(const std::vector<Mesh*>& meshes, Scene& scene);
     ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight);
+    static std::string selectedFile;
+    static bool showFileDialog;
 
 private:
     void DrawMainMenu(Scene& scene);
     void DrawSceneList(Scene& scene, int& selectedIndex);
     void DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes);
+    void DrawFileBrowser();
+    void SetStyle();
 };
