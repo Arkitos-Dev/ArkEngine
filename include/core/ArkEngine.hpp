@@ -9,10 +9,11 @@
 #include "Scene.hpp"
 #include "ResourceManager.hpp"
 #include "UI.hpp"
+#include "ProjectManager.hpp"
 
 class ArkEngine {
 public:
-    ArkEngine(int width, int height, const std::string& title);
+    ArkEngine();
     ~ArkEngine();
     void Run();
 };

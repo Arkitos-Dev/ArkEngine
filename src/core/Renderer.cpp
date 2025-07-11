@@ -208,6 +208,22 @@ void Renderer::RenderMeshes() {
     }
 }
 
+void Renderer::RenderGrid(float aspect) {
+    gridShader->Use();
+
+    // ViewUniforms setzen (siehe Shader)
+    gridShader->SetMat4("view.view", camera.GetViewMatrix());
+    gridShader->SetMat4("view.proj", camera.GetProjectionMatrix(aspect));
+    gridShader->SetVec3("view.pos", camera.position);
+
+    // Model-Matrix für das Plane
+    glm::mat4 model = ComputeModelMatrix(*gridPlane);
+    gridShader->SetMat4("model", model);
+
+    // Plane-Mesh zeichnen
+    gridPlane->GetMesh()->DrawInstanced(*gridShader);
+}
+
 void Renderer::Render() {
     CreateViewportFBO(viewportWidth, viewportHeight);
     while (!window.ShouldClose()) {

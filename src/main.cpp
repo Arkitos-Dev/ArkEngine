@@ -1,7 +1,7 @@
 #include "../include/core/ArkEngine.hpp"
 
 int main() {
-    ArkEngine engine(1920, 1080, "3D Renderer");
+    ArkEngine engine;
     engine.Run();
     return 0;
 }

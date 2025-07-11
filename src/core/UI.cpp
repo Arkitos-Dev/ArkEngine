@@ -5,12 +5,18 @@
 #include "glm/gtx/quaternion.hpp"
 #include "ImGuiFileDialog.h"
 
-UI::UI(GLFWwindow* window) {
+std::string UI::selectedFile;
+bool UI::showFileDialog;
+std::filesystem::path UI::selectedDir;
+
+UI::UI(Window* windowObj, GLFWwindow* window) : windowObj(windowObj), window(window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/DMSans_36pt-Regular.ttf", 16.0f);
     SetStyle();
 }
 
@@ -24,74 +30,7 @@ void UI::SetStyle() {
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    style.WindowRounding = 4.0f;
-    style.FrameRounding = 2.0f;
-    style.GrabRounding = 2.0f;
-    style.ScrollbarRounding = 4.0f;
-    style.FrameBorderSize = 1.0f;
-    style.WindowBorderSize = 1.0f;
-
-    ImVec4 bg = ImVec4(0.08, 0.08, 0.08, 1.0); // Sehr dunkler Hintergrund
-    ImVec4 panel = ImVec4(0.08, 0.08, 0.08, 1.0f); // Panels
-    ImVec4 panelHover = ImVec4(0.12f, 0.12f, 0.12f, 1.0f);
-    ImVec4 panelActive = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-    ImVec4 text = ImVec4(0.92f, 0.93f, 0.95f, 1.0f);
-    ImVec4 textDisabled = ImVec4(0.45f, 0.46f, 0.48f, 1.0f);
-    ImVec4 border = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-
-    style.Colors[ImGuiCol_SliderGrab]        = ImVec4(0.30f, 0.31f, 0.34f, 1.0f);
-    style.Colors[ImGuiCol_SliderGrabActive]  = ImVec4(0.40f, 0.41f, 0.44f, 1.0f);
-
-    style.Colors[ImGuiCol_WindowBg]          = bg;
-    style.Colors[ImGuiCol_ChildBg]           = panel;
-    style.Colors[ImGuiCol_PopupBg]           = panel;
-    style.Colors[ImGuiCol_Border]            = border;
-    style.Colors[ImGuiCol_BorderShadow]      = ImVec4(0,0,0,0);
-
-    style.Colors[ImGuiCol_FrameBg]        = ImVec4(0.2f, 0.2f, 0.2f, 1.0f); // Grundfarbe der Felder
-    style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.22f, 0.22f, 0.22f, 1.0f); // Hover
-    style.Colors[ImGuiCol_FrameBgActive]  = ImVec4(0.25f, 0.25f, 0.25f, 1.0f); // Aktiv
-
-    style.Colors[ImGuiCol_TitleBg]           = panel;
-    style.Colors[ImGuiCol_TitleBgActive]     = panelActive;
-    style.Colors[ImGuiCol_TitleBgCollapsed]  = bg;
-
-    style.Colors[ImGuiCol_MenuBarBg]         = panel;
-
-    style.Colors[ImGuiCol_ScrollbarBg]       = panel;
-    style.Colors[ImGuiCol_ScrollbarGrab]     = ImVec4(0.20f, 0.21f, 0.24f, 1.0f);
-    style.Colors[ImGuiCol_ScrollbarGrabHovered] = panelHover;
-    style.Colors[ImGuiCol_ScrollbarGrabActive]  = panelActive;
-
-    style.Colors[ImGuiCol_CheckMark]         = ImVec4(0.70f, 0.71f, 0.73f, 1.0f);
-
-    style.Colors[ImGuiCol_SliderGrab]        = ImVec4(0.30f, 0.31f, 0.34f, 1.0f);
-    style.Colors[ImGuiCol_SliderGrabActive]  = ImVec4(0.40f, 0.41f, 0.44f, 1.0f);
-
-    style.Colors[ImGuiCol_Button]            = ImVec4(0.20f, 0.21f, 0.24f, 1.0f);
-    style.Colors[ImGuiCol_ButtonHovered]     = ImVec4(0.22f, 0.23f, 0.26f, 1.0f);
-    style.Colors[ImGuiCol_ButtonActive]      = ImVec4(0.24f, 0.26f, 0.28f, 1.0f);
-
-    style.Colors[ImGuiCol_Header]            = panelHover;
-    style.Colors[ImGuiCol_HeaderHovered]     = panelActive;
-    style.Colors[ImGuiCol_HeaderActive]      = panelActive;
-
-    style.Colors[ImGuiCol_Separator]         = border;
-    style.Colors[ImGuiCol_SeparatorHovered]  = panelHover;
-    style.Colors[ImGuiCol_SeparatorActive]   = panelActive;
-
-    style.Colors[ImGuiCol_ResizeGrip]        = panel;
-    style.Colors[ImGuiCol_ResizeGripHovered] = panelHover;
-    style.Colors[ImGuiCol_ResizeGripActive]  = panelActive;
-
-    style.Colors[ImGuiCol_Tab]                = panel;
-    style.Colors[ImGuiCol_TabHovered]         = panelHover;
-    style.Colors[ImGuiCol_TabActive]          = panelActive;
-    style.Colors[ImGuiCol_TabUnfocused]       = bg;
-    style.Colors[ImGuiCol_TabUnfocusedActive] = panel;
-
-    style.Colors[ImGuiCol_Text]              = text;
-    style.Colors[ImGuiCol_TextDisabled]      = textDisabled;
+    LoadStyle("style.txt");
 }
 
 void UI::BeginFrame() {
@@ -139,26 +78,32 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Scene& scene) {
     DrawSceneList(scene, selectedIndex);
     DrawObjectInfo(scene, selectedIndex, meshes);
     DrawFileBrowser();
+    DrawDirectoryTree();
+    DrawStylingEditor();
 }
 
+
+// C++
 void UI::DrawMainMenu(Scene& scene) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec2 oldPadding = style.FramePadding;
+    style.FramePadding.y = 10.0f; // Menüleiste höher machen
+
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Save")) {
-                // Implementierung für Speichern
-            }
-            if (ImGui::MenuItem("Load")) {
-                // Implementierung für Laden
-            }
+            ImGui::MenuItem("Save");
+            ImGui::MenuItem("Load");
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu("Bearbeiten")) {
-            ImGui::MenuItem("Rückgängig", "Strg+Z");
-            ImGui::MenuItem("Wiederholen", "Strg+Y");
+        if (ImGui::BeginMenu("Edit")) {
+            ImGui::MenuItem("Undo", "Strg+Z");
+            ImGui::MenuItem("Redo", "Strg+Y");
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
     }
+
+    style.FramePadding = oldPadding;
 }
 
 void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
@@ -229,15 +174,14 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
 void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
     auto& objects = scene.GetObjects();
     ImGui::Begin("Inspector");
+    ImGui::Separator();
+    ImGui::Text("Transform");
     if (!objects.empty() && selectedIndex >= 0 && selectedIndex < objects.size()) {
         auto& obj = objects[selectedIndex];
-
-        // Typ-Anzeige wie gehabt...
 
         glm::vec3 pos = obj->GetPosition();
         if (ImGui::DragFloat3("Position", &pos.x, 0.05f))
             obj->SetPosition(pos);
-
 
         glm::quat rot = obj->GetRotation();
         float quat[4] = { rot.w, rot.x, rot.y, rot.z };
@@ -248,10 +192,28 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
         }
 
         glm::vec3 scale = obj->GetScale();
-        if (ImGui::DragFloat3("Skalierung", &scale.x, 0.05f, 0.01f, 100.0f))
+        if (ImGui::DragFloat3("Scale", &scale.x, 0.05f, 0.01f, 100.0f))
             obj->SetScale(scale);
 
-        // Light-spezifisch etc. wie gehabt...
+        // Licht-Inspector
+        if (auto* light = dynamic_cast<Light*>(obj.get())) {
+            ImGui::Separator();
+            ImGui::Text("Light Optionen");
+            ImGui::ColorEdit3("Color", (float*)&light->color);
+
+            if (light->type == Light::Type::Directional) {
+                ImGui::DragFloat3("Direction", (float*)&light->direction, 0.01f, -1.0f, 1.0f);
+            }
+            if (light->type == Light::Type::Point || light->type == Light::Type::Spot) {
+                ImGui::DragFloat("Constant", &light->constant, 0.01f, 0.0f, 2.0f);
+                ImGui::DragFloat("Linear", &light->linear, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("Quadratic", &light->quadratic, 0.01f, 0.0f, 1.0f);
+            }
+            if (light->type == Light::Type::Spot) {
+                ImGui::DragFloat("CutOff", &light->cutOff, 0.01f, 0.0f, 1.0f);
+                ImGui::DragFloat("OuterCutOff", &light->outerCutOff, 0.01f, 0.0f, 1.0f);
+            }
+        }
     } else {
         ImGui::Text("Kein Objekt vorhanden.");
     }
@@ -284,44 +246,193 @@ ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight) {
     return imageSize;
 }
 
-std::string UI::selectedFile = "";
-bool UI::showFileDialog = false;
+static std::filesystem::path selectedDir = ProjectManager::Instance().GetProjectRoot();
 
+void UI::DrawDirectoryTree() {
+    static std::filesystem::path assetsRoot = ProjectManager::Instance().GetProjectRoot() + "/assets";
+    ImGui::Begin("Directory");
+    ImGuiTreeNodeFlags rootFlags = (selectedDir == assetsRoot) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_DefaultOpen;
+    bool open = ImGui::TreeNodeEx("assets", rootFlags);
+    if (ImGui::IsItemClicked()) {
+        selectedDir = assetsRoot;
+    }
+    if (open) {
+        DrawDirectoryTreeRecursive(assetsRoot);
+        ImGui::TreePop();
+    }
+    ImGui::End();
+}
+
+void UI::DrawDirectoryTreeRecursive(const std::filesystem::path& dir) {
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        if (entry.is_directory()) {
+            ImGuiTreeNodeFlags flags = (selectedDir == entry.path()) ? ImGuiTreeNodeFlags_Selected : 0;
+            bool open = ImGui::TreeNodeEx(entry.path().filename().string().c_str(), flags);
+            if (ImGui::IsItemClicked()) {
+                selectedDir = entry.path();
+            }
+            if (open) {
+                DrawDirectoryTreeRecursive(entry.path());
+                ImGui::TreePop();
+            }
+        }
+    }
+}
+
+// Zeigt die Dateien des ausgewählten Ordners
 void UI::DrawFileBrowser() {
-    ImGui::Begin("File Browser");
-
-    if (ImGui::Button("Model wählen")) {
-        IGFD::FileDialogConfig modelConfig;
-        modelConfig.path = "resources/model";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseModel", "Model auswählen", ".obj,.fbx,.gltf", modelConfig);
-
-    }
-    if (ImGui::Button("Textur wählen")) {
-        IGFD::FileDialogConfig textureConfig;
-        textureConfig.path = "resources/textures";
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseTexture", "Textur auswählen", ".png,.jpg,.jpeg", textureConfig);
-    }
-
-    // Model-Dialog
-    if (ImGuiFileDialog::Instance()->Display("ChooseModel")) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            selectedFile = ImGuiFileDialog::Instance()->GetFilePathName();
-            // Hier Model laden, z.B. ResourceManager::GetModel(selectedFile);
+    ImGui::Begin("Content");
+    if (std::filesystem::is_directory(selectedDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(selectedDir)) {
+            if (!entry.is_directory()) {
+                if (ImGui::Selectable(entry.path().filename().string().c_str())) {
+                    UI::selectedFile = entry.path().string();
+                }
+                // Drag & Drop für .obj-Dateien
+                if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
+                    ImGui::SetDragDropPayload("MODEL_PATH", entry.path().string().c_str(), entry.path().string().size() + 1);
+                    ImGui::Text("Model: %s", entry.path().filename().string().c_str());
+                    ImGui::EndDragDropSource();
+                }
+            }
         }
-        ImGuiFileDialog::Instance()->Close();
-    }
-    // Textur-Dialog
-    if (ImGuiFileDialog::Instance()->Display("ChooseTexture")) {
-        if (ImGuiFileDialog::Instance()->IsOk()) {
-            selectedFile = ImGuiFileDialog::Instance()->GetFilePathName();
-            // Hier Textur laden, z.B. ResourceManager::GetTexture(selectedFile);
+        // Drop-Target für externe Dateien
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_EXTERNAL_FILES")) {
+                const char* filePath = (const char*)payload->Data;
+                if (std::filesystem::path(filePath).extension() == ".obj") {
+                    ProjectManager::Instance().ImportAsset(filePath, "model");
+                }
+            }
+            ImGui::EndDragDropTarget();
         }
-        ImGuiFileDialog::Instance()->Close();
+    }
+    ImGui::End();
+}
+
+void UI::DrawStylingEditor() {
+    ImGui::Begin("Styling");
+
+    if (ImGui::Button("Style speichern")) {
+        SaveStyle("style.txt");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Style laden")) {
+        LoadStyle("style.txt");
     }
 
-    if (!selectedFile.empty()) {
-        ImGui::Text("Ausgewählt: %s", selectedFile.c_str());
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    ImGui::DragFloat("Alpha", &style.Alpha, 0.01f, 0.2f, 1.0f, "%.2f");
+    ImGui::DragFloat2("WindowPadding", (float*)&style.WindowPadding, 0.1f, 0.0f, 30.0f, "%.1f");
+    ImGui::DragFloat2("FramePadding", (float*)&style.FramePadding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat2("ItemSpacing", (float*)&style.ItemSpacing, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat2("ItemInnerSpacing", (float*)&style.ItemInnerSpacing, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat2("TouchExtraPadding", (float*)&style.TouchExtraPadding, 0.1f, 0.0f, 10.0f, "%.1f");
+    ImGui::DragFloat("IndentSpacing", &style.IndentSpacing, 0.1f, 0.0f, 30.0f, "%.1f");
+    ImGui::DragFloat("ScrollbarSize", &style.ScrollbarSize, 0.1f, 5.0f, 30.0f, "%.1f");
+    ImGui::DragFloat("GrabMinSize", &style.GrabMinSize, 0.1f, 1.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("WindowBorderSize", &style.WindowBorderSize, 0.01f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("ChildBorderSize", &style.ChildBorderSize, 0.01f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("PopupBorderSize", &style.PopupBorderSize, 0.01f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("FrameBorderSize", &style.FrameBorderSize, 0.01f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("TabBorderSize", &style.TabBorderSize, 0.01f, 0.0f, 5.0f, "%.2f");
+    ImGui::DragFloat("WindowRounding", &style.WindowRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("ChildRounding", &style.ChildRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("FrameRounding", &style.FrameRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("PopupRounding", &style.PopupRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("GrabRounding", &style.GrabRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+    ImGui::DragFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.01f, 0.0f, 10.0f, "%.2f");
+    ImGui::DragFloat("TabRounding", &style.TabRounding, 0.1f, 0.0f, 20.0f, "%.1f");
+
+    if (ImGui::CollapsingHeader("Colors", ImGuiTreeNodeFlags_DefaultOpen)) {
+        for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+            ImGui::ColorEdit4(ImGui::GetStyleColorName(i), (float*)&style.Colors[i]);
+        }
+    }
+
+    if (ImGui::Button("Reset Style")) {
+        ImGui::StyleColorsDark();
+        SetStyle();
     }
 
     ImGui::End();
+}
+
+#include <fstream>
+#include <sstream>
+
+void UI::SaveStyle(const std::string& filename) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    std::ofstream file(filename);
+    if (!file) return;
+
+    file << style.Alpha << "\n";
+    file << style.WindowPadding.x << " " << style.WindowPadding.y << "\n";
+    file << style.WindowRounding << "\n";
+    file << style.WindowBorderSize << "\n";
+    file << style.WindowMinSize.x << " " << style.WindowMinSize.y << "\n";
+    file << style.WindowTitleAlign.x << " " << style.WindowTitleAlign.y << "\n";
+    file << style.ChildRounding << "\n";
+    file << style.ChildBorderSize << "\n";
+    file << style.PopupRounding << "\n";
+    file << style.PopupBorderSize << "\n";
+    file << style.FramePadding.x << " " << style.FramePadding.y << "\n";
+    file << style.FrameRounding << "\n";
+    file << style.FrameBorderSize << "\n";
+    file << style.ItemSpacing.x << " " << style.ItemSpacing.y << "\n";
+    file << style.ItemInnerSpacing.x << " " << style.ItemInnerSpacing.y << "\n";
+    file << style.TouchExtraPadding.x << " " << style.TouchExtraPadding.y << "\n";
+    file << style.IndentSpacing << "\n";
+    file << style.ColumnsMinSpacing << "\n";
+    file << style.ScrollbarSize << "\n";
+    file << style.ScrollbarRounding << "\n";
+    file << style.GrabMinSize << "\n";
+    file << style.GrabRounding << "\n";
+    file << style.LogSliderDeadzone << "\n";
+    file << style.TabRounding << "\n";
+    file << style.TabBorderSize << "\n";
+    // Farben
+    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+        ImVec4 c = style.Colors[i];
+        file << c.x << " " << c.y << " " << c.z << " " << c.w << "\n";
+    }
+}
+
+void UI::LoadStyle(const std::string& filename) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    std::ifstream file(filename);
+    if (!file) return;
+
+    file >> style.Alpha;
+    file >> style.WindowPadding.x >> style.WindowPadding.y;
+    file >> style.WindowRounding;
+    file >> style.WindowBorderSize;
+    file >> style.WindowMinSize.x >> style.WindowMinSize.y;
+    file >> style.WindowTitleAlign.x >> style.WindowTitleAlign.y;
+    file >> style.ChildRounding;
+    file >> style.ChildBorderSize;
+    file >> style.PopupRounding;
+    file >> style.PopupBorderSize;
+    file >> style.FramePadding.x >> style.FramePadding.y;
+    file >> style.FrameRounding;
+    file >> style.FrameBorderSize;
+    file >> style.ItemSpacing.x >> style.ItemSpacing.y;
+    file >> style.ItemInnerSpacing.x >> style.ItemInnerSpacing.y;
+    file >> style.TouchExtraPadding.x >> style.TouchExtraPadding.y;
+    file >> style.IndentSpacing;
+    file >> style.ColumnsMinSpacing;
+    file >> style.ScrollbarSize;
+    file >> style.ScrollbarRounding;
+    file >> style.GrabMinSize;
+    file >> style.GrabRounding;
+    file >> style.LogSliderDeadzone;
+    file >> style.TabRounding;
+    file >> style.TabBorderSize;
+    // Farben
+    for (int i = 0; i < ImGuiCol_COUNT; ++i) {
+        ImVec4& c = style.Colors[i];
+        file >> c.x >> c.y >> c.z >> c.w;
+    }
 }

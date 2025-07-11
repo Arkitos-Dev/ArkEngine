@@ -46,6 +46,7 @@ private:
     void LimitFPS(double frameStart, double targetFPS);
     void UpdateMeshCache();
     void RenderMeshes();
+    void RenderGrid(float aspect);
     void SetProjectionMatrix(const glm::mat4& projection, const glm::mat4& view);
     void SetMaterials();
     void SetLighting(Shader& shader);
@@ -57,6 +58,8 @@ private:
     std::shared_ptr<Shader> shader;
     Camera& camera;
     UI& ui;
+    std::shared_ptr<Shader> gridShader;
+    std::shared_ptr<Plane> gridPlane;
 };
 
 #endif //INC_3DRENDERER_RENDERER_HPP

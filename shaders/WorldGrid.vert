@@ -18,7 +18,6 @@ vec3 UnprojectPoint(float x, float y, float z, mat4 view, mat4 projection) {
     return unprojectedPoint.xyz / unprojectedPoint.w;
 }
 
-// shaders/WorldGrid.vert
 void main() {
     nearPoint = UnprojectPoint(aPos.x * 2.0, aPos.z * 2.0, 0.0, view.view, view.proj);
     farPoint  = UnprojectPoint(aPos.x * 2.0, aPos.z * 2.0, 1.0, view.view, view.proj);

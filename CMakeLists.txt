@@ -67,6 +67,13 @@ target_include_directories(imguifiledialog PUBLIC
 )
 target_link_libraries(imguifiledialog PUBLIC imgui)
 
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.11.3
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 set(IMGUI_SOURCES
         external/imgui/imgui.cpp
         external/imgui/imgui_draw.cpp
@@ -97,6 +104,7 @@ add_executable(3DRenderer
         src/core/ArkEngine.cpp
         src/objects/Mesh.cpp
         src/objects/Model.cpp
+        src/core/ProjectManager.cpp
 )
 
 # Include directories
@@ -117,6 +125,7 @@ target_link_libraries(3DRenderer
         imgui
         imguifiledialog
         assimp
+        nlohmann_json::nlohmann_json
 )
 
 # On some systems, you may need to link OpenGL manually

@@ -5,11 +5,6 @@ in vec3 farPoint;
 
 out vec4 outColor;
 
-uniform mat4 fragView;
-uniform mat4 fragProj;
-uniform float near;
-uniform float far;
-
 void main() {
     // Ray von Kamera durch das Fragment
     vec3 rayDir = normalize(farPoint - nearPoint);
