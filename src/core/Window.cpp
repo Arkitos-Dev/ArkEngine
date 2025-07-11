@@ -4,8 +4,17 @@
 #include "glad/glad.h"
 #include "../../include/core/Window.hpp"
 #include <iostream>
+#include <vector>
 
-// C++
+std::vector<std::string> droppedFiles;
+
+void drop_callback(GLFWwindow* window, int count, const char** paths) {
+    droppedFiles.clear();
+    for (int i = 0; i < count; ++i) {
+        droppedFiles.push_back(paths[i]);
+    }
+}
+
 Window::Window(int width, int height, const char* title) {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -25,6 +34,8 @@ Window::Window(int width, int height, const char* title) {
     // Fenster maximieren (Taskleiste bleibt sichtbar)
     glfwMaximizeWindow(window);
 
+    glfwSetDropCallback(window, drop_callback);
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         exit(-1);
@@ -33,6 +44,7 @@ Window::Window(int width, int height, const char* title) {
     glfwSwapInterval(0);
     glfwSetFramebufferSizeCallback(window, Window::framebuffer_size_callback);
 }
+
 
 Window::~Window() {
     glfwTerminate();

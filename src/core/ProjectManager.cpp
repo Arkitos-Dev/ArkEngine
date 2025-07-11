@@ -15,6 +15,15 @@ ProjectManager& ProjectManager::Instance() {
     return instance;
 }
 
+// Hilfsfunktion für den Projektpfad
+static std::string GetProjectAssetPath(const std::string& relativePath) {
+    std::filesystem::path p(relativePath);
+    if (p.is_absolute())
+        return relativePath;
+    return ProjectManager::Instance().GetProjectRoot() + "/" + relativePath;
+}
+
+
 void ProjectManager::CreateProject(const std::string& projectName) {
     const char* userProfile = std::getenv("USERPROFILE");
     if (!userProfile) return;
@@ -102,7 +111,17 @@ void ProjectManager::ImportAsset(const std::string& filePath, const std::string&
     fs::create_directories(assetFolder);
     std::string filename = fs::path(filePath).filename().string();
     std::string destPath = assetFolder + "/" + filename;
-    fs::copy_file(filePath, destPath, fs::copy_options::overwrite_existing);
+    try {
+        if (fs::exists(destPath)) {
+            // Optional: Datei vorher löschen
+            fs::remove(destPath);
+        }
+        fs::copy_file(filePath, destPath, fs::copy_options::overwrite_existing);
+    } catch (const fs::filesystem_error& e) {
+        // Fehler ausgeben, aber nicht crashen
+        std::cerr << "ImportAsset Fehler: " << e.what() << std::endl;
+        return;
+    }
 
     AssetMeta meta;
     meta.uuid = GenerateUUID();

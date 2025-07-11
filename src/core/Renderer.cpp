@@ -255,7 +255,7 @@ void Renderer::Render() {
         UpdateMeshCache();
 
         ui.BeginFrame();
-        ui.DrawViewport(viewportTexture, viewportWidth, viewportHeight);
+        ui.DrawViewport(viewportTexture, viewportWidth, viewportHeight, scene);
         ui.Draw(cachedMeshes, scene);
         ui.EndFrame();
 

@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <cstdlib>
+#include <iostream>
 
 struct AssetMeta {
     std::string uuid;

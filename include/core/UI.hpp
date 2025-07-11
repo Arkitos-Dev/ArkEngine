@@ -20,10 +20,10 @@ public:
     void BeginFrame();
     void EndFrame();
     void Draw(const std::vector<Mesh*>& meshes, Scene& scene);
-    ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight);
+    ImVec2 DrawViewport(GLuint texture, int texWidth, int texHeight, Scene& scene);
 
     void DrawDirectoryTree();
-    void DrawFileBrowser();
+    void DrawFileBrowser(Scene& scene);
 
     static std::string selectedFile;
     static bool showFileDialog;

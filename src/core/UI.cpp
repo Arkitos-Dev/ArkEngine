@@ -1,13 +1,11 @@
 #include "../../include/core/UI.hpp"
 #include "../../include/objects/Cube.hpp"
 #include "../../include/objects/Plane.hpp"
-#include "../../include/objects/Light.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "ImGuiFileDialog.h"
 
-std::string UI::selectedFile;
-bool UI::showFileDialog;
 std::filesystem::path UI::selectedDir;
+std::string UI::selectedFile;
 
 UI::UI(Window* windowObj, GLFWwindow* window) : windowObj(windowObj), window(window) {
     IMGUI_CHECKVERSION();
@@ -77,13 +75,11 @@ void UI::Draw(const std::vector<Mesh*>& meshes, Scene& scene) {
 
     DrawSceneList(scene, selectedIndex);
     DrawObjectInfo(scene, selectedIndex, meshes);
-    DrawFileBrowser();
+    DrawFileBrowser(scene);
     DrawDirectoryTree();
     DrawStylingEditor();
 }
 
-
-// C++
 void UI::DrawMainMenu(Scene& scene) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 oldPadding = style.FramePadding;
@@ -168,6 +164,16 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
         }
         ImGui::EndPopup();
     }
+
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
+            const char* modelPath = (const char*)payload->Data;
+            auto modelObject = std::make_shared<Model>(modelPath);
+            scene.AddObject(modelObject);
+            selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
+        }
+        ImGui::EndDragDropTarget();
+    }
     ImGui::End();
 }
 
@@ -220,7 +226,8 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
     ImGui::End();
 }
 
-ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight) {
+// C++
+ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight, Scene& scene) {
     ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImVec2 avail = ImGui::GetContentRegionAvail();
     float availAspect = avail.x / avail.y;
@@ -241,9 +248,67 @@ ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight) {
             cursor.y + (avail.y - imageSize.y) * 0.5f
     ));
 
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
+            const char* modelPath = (const char*)payload->Data;
+            // Modell ins Projekt importieren
+            ProjectManager::Instance().ImportAsset(modelPath, "model");
+            std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(modelPath).filename().string();
+            auto modelObject = ResourceManager::GetModel(assetPath);
+            scene.AddObject(modelObject);
+        }
+        ImGui::EndDragDropTarget();
+    }
+
     ImGui::Image((void*)(intptr_t)texture, imageSize, ImVec2(0,1), ImVec2(1,0));
     ImGui::End();
     return imageSize;
+}
+
+void UI::DrawFileBrowser(Scene& scene) {
+    ImGui::Begin("Content");
+    if (std::filesystem::is_directory(selectedDir)) {
+        for (const auto& entry : std::filesystem::directory_iterator(selectedDir)) {
+            if (!entry.is_directory()) {
+                if (ImGui::Selectable(entry.path().filename().string().c_str())) {
+                    UI::selectedFile = entry.path().string();
+                }
+                // Drag & Drop für .obj-Dateien
+                if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
+                    ImGui::SetDragDropPayload("MODEL_PATH", entry.path().string().c_str(), entry.path().string().size() + 1);
+                    ImGui::Text("Model: %s", entry.path().filename().string().c_str());
+                    ImGui::EndDragDropSource();
+                }
+            }
+        }
+        extern std::vector<std::string> droppedFiles;
+
+        // Drag & Drop aus Explorer
+        if (!droppedFiles.empty()) {
+            for (const auto& filePath : droppedFiles) {
+                if (std::filesystem::path(filePath).extension() == ".obj") {
+                    ProjectManager::Instance().ImportAsset(filePath, "model");
+                    selectedDir = selectedDir;
+                    // Modell als GameObject zur Szene hinzufügen
+                    std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(filePath).filename().string();
+                    auto modelObject = ResourceManager::GetModel(assetPath);
+                    scene.AddObject(modelObject);
+                }
+            }
+            droppedFiles.clear();
+        }
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
+                const char* modelPath = (const char*)payload->Data;
+                ProjectManager::Instance().ImportAsset(modelPath, "model");
+                std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(modelPath).filename().string();
+                auto modelObject = ResourceManager::GetModel(assetPath);
+                scene.AddObject(modelObject);
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
+    ImGui::End();
 }
 
 static std::filesystem::path selectedDir = ProjectManager::Instance().GetProjectRoot();
@@ -277,37 +342,6 @@ void UI::DrawDirectoryTreeRecursive(const std::filesystem::path& dir) {
             }
         }
     }
-}
-
-// Zeigt die Dateien des ausgewählten Ordners
-void UI::DrawFileBrowser() {
-    ImGui::Begin("Content");
-    if (std::filesystem::is_directory(selectedDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(selectedDir)) {
-            if (!entry.is_directory()) {
-                if (ImGui::Selectable(entry.path().filename().string().c_str())) {
-                    UI::selectedFile = entry.path().string();
-                }
-                // Drag & Drop für .obj-Dateien
-                if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
-                    ImGui::SetDragDropPayload("MODEL_PATH", entry.path().string().c_str(), entry.path().string().size() + 1);
-                    ImGui::Text("Model: %s", entry.path().filename().string().c_str());
-                    ImGui::EndDragDropSource();
-                }
-            }
-        }
-        // Drop-Target für externe Dateien
-        if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_EXTERNAL_FILES")) {
-                const char* filePath = (const char*)payload->Data;
-                if (std::filesystem::path(filePath).extension() == ".obj") {
-                    ProjectManager::Instance().ImportAsset(filePath, "model");
-                }
-            }
-            ImGui::EndDragDropTarget();
-        }
-    }
-    ImGui::End();
 }
 
 void UI::DrawStylingEditor() {

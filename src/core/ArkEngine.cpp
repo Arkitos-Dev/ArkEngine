@@ -20,9 +20,6 @@ void ArkEngine::Run() {
 
     Scene scene;
 
-    auto backpack = ResourceManager::GetModel("resources/model/backpack/backpack.obj");
-    scene.AddObject(backpack);
-
     UI ui(&window,window.GetWindow());
 
     Renderer renderer(window, scene, shader, camera, ui);

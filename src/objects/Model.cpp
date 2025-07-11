@@ -23,6 +23,7 @@ void Model::loadModel(std::string path)
         std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
         return;
     }
+    // directory ist jetzt relativ zum Projektverzeichnis
     directory = path.substr(0, path.find_last_of('/'));
 
     processNode(scene->mRootNode, scene);
@@ -95,8 +96,6 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
     return Mesh(vertices, indices, textures);
 }
 
-
-// In src/objects/Model.cpp
 std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
 {
     std::vector<Texture> textures;
@@ -105,10 +104,11 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
         aiString str;
         mat->GetTexture(type, i, &str);
         Texture texture;
+        // Korrigierter Pfad: relativ zum Projektverzeichnis
         std::string filename = directory + "/" + str.C_Str();
         texture.id = ResourceManager::GetTexture(filename);
         texture.type = typeName;
-        texture.path = str.C_Str(); // <-- Korrektur hier
+        texture.path = filename;
         textures.push_back(texture);
     }
     return textures;
