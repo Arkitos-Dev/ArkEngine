@@ -39,6 +39,40 @@ private:
     void SaveStyle(const std::string& filename);
     void DrawDirectoryTreeRecursive(const std::filesystem::path& dir);
     void DrawDirectoryContextMenu(const std::filesystem::path& dir, bool isRoot);
+    void DrawBreadcrumbs();
+
+    std::map<std::string, std::string> fileIcons = {
+            {".obj", "📦"},     // 3D Model
+            {".fbx", "📦"},     // 3D Model
+            {".gltf", "📦"},    // 3D Model
+            {".png", "🖼️"},     // Image
+            {".jpg", "🖼️"},     // Image
+            {".jpeg", "🖼️"},    // Image
+            {".bmp", "🖼️"},     // Image
+            {".tga", "🖼️"},     // Image
+            {".txt", "📄"},     // Text
+            {".json", "⚙️"},    // Config
+            {".shader", "🔧"},  // Shader
+            {".glsl", "🔧"},    // Shader
+            {".hlsl", "🔧"},    // Shader
+            {".mtl", "🎨"},     // Material
+            {"folder", "📁"},   // Ordner
+            {"default", "📄"}   // Standard
+    };
+
+    std::string GetFileIcon(const std::filesystem::path& path);
+    std::string GetFileSizeString(const std::filesystem::path& path);
+
+    void DrawFileGrid(Scene& scene, const std::vector<std::filesystem::path>& folders,
+                      const std::vector<std::filesystem::path>& files,
+                      std::filesystem::path& renamingPath, char* renameBuffer, bool& startRename);
+
+    GLuint folderIcon = 0;
+    GLuint fileIcon = 0;
+    GLuint folderOpenIcon = 0;
+
+
+    void LoadIcons();
 
     GLFWwindow* window;
     Window* windowObj;

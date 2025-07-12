@@ -3,6 +3,8 @@
 #include "../../include/objects/Plane.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "ImGuiFileDialog.h"
+#include <fstream>
+#include <sstream>
 
 std::filesystem::path UI::selectedDir;
 std::string UI::selectedFile;
@@ -19,6 +21,7 @@ UI::UI(Window* windowObj, GLFWwindow* window) : windowObj(windowObj), window(win
     ImGuiIO& io = ImGui::GetIO();
     io.FontDefault = io.Fonts->AddFontFromFileTTF("resources/fonts/DMSans_36pt-Regular.ttf", 16.0f);
     SetStyle();
+    LoadIcons();
 }
 
 UI::~UI() {
@@ -33,6 +36,7 @@ void UI::SetStyle() {
 
     LoadStyle("style.txt");
 }
+
 
 void UI::BeginFrame() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -188,6 +192,264 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
     ImGui::End();
 }
 
+void UI::LoadIcons() {
+    // Lade Ordner-Icon
+    folderIcon = ResourceManager::GetTexture("resources/icons/folder.png");
+    fileIcon = ResourceManager::GetTexture("resources/icons/file.png");
+}
+
+void UI::DrawFileGrid(Scene& scene, const std::vector<std::filesystem::path>& folders,
+                      const std::vector<std::filesystem::path>& files,
+                      std::filesystem::path& renamingPath, char* renameBuffer, bool& startRename) {
+
+    float itemSize = 80.0f;
+    float spacing = 10.0f;
+    ImVec2 contentRegion = ImGui::GetContentRegionAvail();
+    int columns = std::max(1, (int)((contentRegion.x + spacing) / (itemSize + spacing)));
+
+    int currentColumn = 0;
+
+    // Back-Button für übergeordneten Ordner hinzufügen
+    ProjectManager& pm = ProjectManager::Instance();
+    std::filesystem::path assetsRoot = std::filesystem::path(pm.GetProjectRoot()) / "assets";
+
+    if (selectedDir != assetsRoot && selectedDir.has_parent_path()) {
+        ImGui::BeginGroup();
+
+        // Transparenter Hintergrund für Back-Button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
+        // Back-Icon als Button mit PNG
+        if (folderIcon != 0) {
+            if (ImGui::ImageButton("back_button", (void*)(intptr_t)folderIcon, ImVec2(itemSize, itemSize))) {
+                selectedDir = selectedDir.parent_path();
+            }
+        } else {
+            if (ImGui::Button("⬆️##back_button", ImVec2(itemSize, itemSize))) {
+                selectedDir = selectedDir.parent_path();
+            }
+        }
+
+        ImGui::PopStyleColor();
+
+        // Label mit Zielordner-Namen
+        ImGui::SetNextItemWidth(itemSize);
+        std::string parentName = selectedDir.parent_path().filename().string();
+        if (parentName.empty()) parentName = "assets";
+        ImGui::TextWrapped("%s", parentName.c_str());
+
+        ImGui::EndGroup();
+
+        currentColumn++;
+    }
+
+    // Ordner anzeigen
+    for (const auto& folder : folders) {
+        if (currentColumn > 0 && currentColumn < columns) ImGui::SameLine();
+
+        std::string folderName = folder.filename().string();
+
+        ImGui::BeginGroup();
+
+        // Transparenter Hintergrund für Ordner
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+
+        // Icon als großer Button mit PNG
+        if (folderIcon != 0) {
+            std::string buttonId = "folder_" + folder.string();
+            if (ImGui::ImageButton(buttonId.c_str(), (void*)(intptr_t)folderIcon, ImVec2(itemSize, itemSize))) {
+                selectedDir = folder;
+            }
+        } else {
+            // Fallback auf Emoji
+            std::string icon = GetFileIcon(folder);
+            if (ImGui::Button((icon + "##" + folder.string()).c_str(), ImVec2(itemSize, itemSize))) {
+                selectedDir = folder;
+            }
+        }
+
+        ImGui::PopStyleColor();
+
+        // Doppelklick zum Öffnen
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            selectedDir = folder;
+        }
+
+        // Dateiname unten
+        ImGui::SetNextItemWidth(itemSize);
+        ImGui::TextWrapped("%s", folderName.c_str());
+
+        ImGui::EndGroup();
+
+        // Kontextmenü für Ordner
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Rename")) {
+                renamingPath = folder;
+                strncpy(renameBuffer, folderName.c_str(), 255);
+                renameBuffer[255] = '\0';
+                startRename = true;
+            }
+            if (ImGui::MenuItem("Delete")) {
+                try {
+                    if (selectedDir == folder) {
+                        selectedDir = selectedDir.parent_path();
+                    }
+                    std::filesystem::remove_all(folder);
+                } catch (const std::filesystem::filesystem_error& e) {
+                    std::cerr << "Fehler beim Löschen: " << e.what() << std::endl;
+                }
+            }
+            ImGui::EndPopup();
+        }
+
+        currentColumn++;
+        if (currentColumn >= columns) {
+            currentColumn = 0;
+        }
+    }
+
+    // Dateien anzeigen
+    for (const auto& file : files) {
+        if (currentColumn > 0) ImGui::SameLine();
+
+        std::string fileName = file.filename().string();
+        std::string icon = GetFileIcon(file);
+        bool isSelected = (UI::selectedFile == file.string());
+
+        ImGui::BeginGroup();
+
+        // Icon mit PNG-Bild oder Fallback auf Emoji
+        ImGui::PushStyleColor(ImGuiCol_Button, isSelected ? ImVec4(0.3f, 0.5f, 0.8f, 1.0f) : ImVec4(0, 0, 0, 0));
+
+        if (fileIcon != 0) {
+            // PNG-Icon verwenden
+            std::string buttonId = "file_" + file.string();
+            if (ImGui::ImageButton(buttonId.c_str(), (void*)(intptr_t)fileIcon, ImVec2(itemSize, itemSize))) {
+                UI::selectedFile = file.string();
+            }
+        } else {
+            // Fallback auf Emoji
+            if (ImGui::Button((icon + "##" + file.string()).c_str(), ImVec2(itemSize, itemSize))) {
+                UI::selectedFile = file.string();
+            }
+        }
+
+        ImGui::PopStyleColor();
+
+        // Drag & Drop für Models
+        std::string extension = file.extension().string();
+        if (extension == ".obj" && ImGui::BeginDragDropSource()) {
+            std::string fullPath = file.string();
+            ImGui::SetDragDropPayload("MODEL_PATH", fullPath.c_str(), fullPath.size() + 1);
+            ImGui::Text("Model: %s", fileName.c_str());
+            ImGui::EndDragDropSource();
+        }
+
+        // Dateiname und Größe
+        ImGui::SetNextItemWidth(itemSize);
+        ImGui::TextWrapped("%s", fileName.c_str());
+        ImGui::SetNextItemWidth(itemSize);
+        ImGui::TextWrapped("%s", GetFileSizeString(file).c_str());
+
+        ImGui::EndGroup();
+
+        // Kontextmenü für Dateien
+        if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::MenuItem("Rename")) {
+                renamingPath = file;
+                strncpy(renameBuffer, fileName.c_str(), 255);
+                renameBuffer[255] = '\0';
+                startRename = true;
+            }
+            if (ImGui::MenuItem("Delete")) {
+                try {
+                    std::filesystem::remove(file);
+                    if (UI::selectedFile == file.string()) {
+                        UI::selectedFile.clear();
+                    }
+                } catch (const std::filesystem::filesystem_error& e) {
+                    std::cerr << "Fehler beim Löschen: " << e.what() << std::endl;
+                }
+            }
+            ImGui::EndPopup();
+        }
+
+        currentColumn++;
+        if (currentColumn >= columns) {
+            currentColumn = 0;
+        }
+    }
+
+    // Rename-Popup
+    if (startRename) {
+        ImGui::OpenPopup("RenameItem");
+        startRename = false;
+    }
+
+    if (ImGui::BeginPopupModal("RenameItem", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("Neuer Name:");
+        ImGui::InputText("##rename", renameBuffer, 256);
+
+        if (ImGui::Button("OK") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            try {
+                std::filesystem::path newPath = renamingPath.parent_path() / renameBuffer;
+                std::filesystem::rename(renamingPath, newPath);
+
+                if (UI::selectedFile == renamingPath.string()) {
+                    UI::selectedFile = newPath.string();
+                }
+                if (selectedDir == renamingPath) {
+                    selectedDir = newPath;
+                }
+            } catch (const std::filesystem::filesystem_error& e) {
+                std::cerr << "Rename-Fehler: " << e.what() << std::endl;
+            }
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+void UI::DrawBreadcrumbs() {
+    ProjectManager& pm = ProjectManager::Instance();
+    std::filesystem::path projectRoot = pm.GetProjectRoot();
+    std::filesystem::path assetsRoot = projectRoot / "assets";
+
+    // Prüfen ob selectedDir gültig ist
+    if (!std::filesystem::exists(selectedDir)) {
+        selectedDir = assetsRoot;
+    }
+
+    std::filesystem::path relativePath = std::filesystem::relative(selectedDir, assetsRoot);
+
+    // "assets" Button
+    if (ImGui::Button("assets")) {
+        selectedDir = assetsRoot;
+    }
+
+    // Pfad-Teile durchgehen
+    std::filesystem::path currentPath = assetsRoot;
+
+    for (const auto& part : relativePath) {
+        if (part == ".") continue;
+
+        ImGui::SameLine();
+        ImGui::Text(">");
+        ImGui::SameLine();
+
+        currentPath /= part;
+        if (ImGui::Button(part.string().c_str())) {
+            selectedDir = currentPath;
+        }
+    }
+}
+
 void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*>& meshes) {
     auto& objects = scene.GetObjects();
     ImGui::Begin("Inspector");
@@ -282,8 +544,18 @@ ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight, Scene& scen
     return imageSize;
 }
 
+
+
 void UI::DrawFileBrowser(Scene& scene) {
+    static std::filesystem::path renamingPath;
+    static char renameBuffer[256] = "";
+    static bool startRename = false;
+
     ImGui::Begin("Content");
+
+    // Navigation Breadcrumbs
+    DrawBreadcrumbs();
+    ImGui::Separator();
 
     try {
         if (std::filesystem::exists(selectedDir) && std::filesystem::is_directory(selectedDir)) {
@@ -295,35 +567,39 @@ void UI::DrawFileBrowser(Scene& scene) {
                 return;
             }
 
+            // Ordner und Dateien getrennt sammeln
+            std::vector<std::filesystem::path> folders;
+            std::vector<std::filesystem::path> files;
+
             for (const auto& entry : dirIter) {
-                if (!entry.is_directory()) {
-                    if (ImGui::Selectable(entry.path().filename().string().c_str())) {
-                        UI::selectedFile = entry.path().string();
-                    }
-                    if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
-                        std::string fullPath = entry.path().string();
-                        ImGui::SetDragDropPayload("MODEL_PATH", fullPath.c_str(), fullPath.size() + 1);
-                        ImGui::Text("Model: %s", entry.path().filename().string().c_str());
-                        ImGui::EndDragDropSource();
-                    }
+                if (entry.is_directory()) {
+                    folders.push_back(entry.path());
+                } else {
+                    files.push_back(entry.path());
                 }
             }
+
+            // Sortieren
+            std::sort(folders.begin(), folders.end());
+            std::sort(files.begin(), files.end());
+
+            // Nur Grid-Ansicht verwenden
+            DrawFileGrid(scene, folders, files, renamingPath, renameBuffer, startRename);
+
         } else {
-            ImGui::Text("Ungültiges Verzeichnis: %s", selectedDir.string().c_str());
+            ImGui::Text("Verzeichnis nicht gefunden oder ungültig");
         }
     } catch (const std::filesystem::filesystem_error& e) {
         ImGui::Text("Filesystem-Fehler: %s", e.what());
     }
 
+    // Drag & Drop Import Logic bleibt gleich
     extern std::vector<std::string> droppedFiles;
-
-    // Nur externe Dateien importieren (Drag & Drop von außerhalb)
     if (!droppedFiles.empty()) {
         for (const auto& filePath : droppedFiles) {
             if (std::filesystem::path(filePath).extension() == ".obj") {
                 std::filesystem::path projectRoot = ProjectManager::Instance().GetProjectRoot();
                 std::filesystem::path assetsPath = projectRoot / "assets";
-                // Nur importieren wenn externe Datei
                 if (filePath.find(assetsPath.string()) == std::string::npos) {
                     ProjectManager::Instance().ImportAsset(filePath, "model");
                 }
@@ -338,33 +614,11 @@ void UI::DrawFileBrowser(Scene& scene) {
 void UI::DrawDirectoryTree() {
     static std::filesystem::path assetsRoot = std::filesystem::path(ProjectManager::Instance().GetProjectRoot()) / "assets";
 
-    // Falls selectedDir noch nicht initialisiert wurde
     if (selectedDir.empty()) {
         selectedDir = assetsRoot;
     }
 
     ImGui::Begin("Directory");
-
-    // Popup für das Umbenennen (bleibt bestehen)
-    if (ImGui::BeginPopup("RenameFolderPopup")) {
-        ImGui::Text("Rename Folder");
-        ImGui::InputText("##RenameName", renameName, sizeof(renameName));
-        if (ImGui::Button("Rename")) {
-            std::filesystem::path newPath = pathToRename.parent_path() / renameName;
-            if (!std::filesystem::exists(newPath)) {
-                std::filesystem::rename(pathToRename, newPath);
-                if (selectedDir == pathToRename) {
-                    selectedDir = newPath;
-                }
-            }
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
 
     // Root-Node
     ImGuiTreeNodeFlags rootFlags = ImGuiTreeNodeFlags_DefaultOpen;
@@ -397,12 +651,12 @@ void UI::DrawDirectoryTree() {
         ImGui::EndPopup();
     }
 
-    // Kontextmenü für leeren Bereich im Fenster - IMMER im Root-Verzeichnis erstellen
+    // Kontextmenü für leeren Bereich
     if (ImGui::BeginPopupContextWindow("DirectoryWindowContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
         if (ImGui::MenuItem("New Folder")) {
             std::string folderName = "New Folder";
             int counter = 1;
-            std::filesystem::path newPath = assetsRoot / folderName; // Immer assetsRoot verwenden
+            std::filesystem::path newPath = assetsRoot / folderName;
 
             while (std::filesystem::exists(newPath)) {
                 newPath = assetsRoot / (folderName + " " + std::to_string(counter));
@@ -426,8 +680,11 @@ void UI::DrawDirectoryTree() {
 }
 
 void UI::DrawDirectoryTreeRecursive(const std::filesystem::path& dir) {
+    static std::filesystem::path renamingPath;
+    static char renameBuffer[256] = "";
+    static bool startRename = false;
+
     try {
-        // Prüfen ob das Verzeichnis existiert und zugänglich ist
         if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
             return;
         }
@@ -442,19 +699,91 @@ void UI::DrawDirectoryTreeRecursive(const std::filesystem::path& dir) {
         for (const auto& entry : dirIter) {
             if (entry.is_directory()) {
                 std::string folderName = entry.path().filename().string();
+                bool isRenaming = (renamingPath == entry.path());
 
                 ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
                 if (selectedDir == entry.path()) {
                     flags |= ImGuiTreeNodeFlags_Selected;
                 }
 
-                bool nodeOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+                bool nodeOpen = false;
 
-                if (ImGui::IsItemClicked()) {
-                    selectedDir = entry.path();
+                if (isRenaming) {
+                    // Inline-Bearbeitung
+                    ImGui::SetNextItemWidth(-1);
+                    if (startRename) {
+                        ImGui::SetKeyboardFocusHere();
+                        startRename = false;
+                    }
+
+                    if (ImGui::InputText(("##rename" + entry.path().string()).c_str(), renameBuffer, sizeof(renameBuffer),
+                                         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                        // Enter gedrückt - Umbenennen bestätigen
+                        std::filesystem::path newPath = entry.path().parent_path() / renameBuffer;
+                        if (!std::filesystem::exists(newPath) && strlen(renameBuffer) > 0) {
+                            try {
+                                std::filesystem::rename(entry.path(), newPath);
+                                if (selectedDir == entry.path()) {
+                                    selectedDir = newPath;
+                                }
+                            } catch (const std::filesystem::filesystem_error& e) {
+                                std::cerr << "Fehler beim Umbenennen: " << e.what() << std::endl;
+                            }
+                        }
+                        renamingPath.clear();
+                    }
+
+                    // Escape oder Klick außerhalb - Abbrechen
+                    if (ImGui::IsKeyPressed(ImGuiKey_Escape) ||
+                        (!ImGui::IsItemActive() && !ImGui::IsItemFocused() && ImGui::IsMouseClicked(0))) {
+                        renamingPath.clear();
+                    }
+                } else {
+                    // Normaler TreeNode
+                    nodeOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+
+                    if (ImGui::IsItemClicked()) {
+                        selectedDir = entry.path();
+                    }
+
+                    // Kontextmenü
+                    if (ImGui::BeginPopupContextItem()) {
+                        if (ImGui::MenuItem("New Folder")) {
+                            std::string newFolderName = "New Folder";
+                            int counter = 1;
+                            std::filesystem::path newPath = entry.path() / newFolderName;
+
+                            while (std::filesystem::exists(newPath)) {
+                                newPath = entry.path() / (newFolderName + " " + std::to_string(counter));
+                                counter++;
+                            }
+
+                            bool success = ProjectManager::Instance().CreateFolder(entry.path().string(), newPath.filename().string());
+                            if (!success) {
+                                std::cerr << "Fehler beim Erstellen des Ordners!" << std::endl;
+                            }
+                        }
+                        if (ImGui::MenuItem("Rename")) {
+                            renamingPath = entry.path();
+                            strncpy(renameBuffer, folderName.c_str(), sizeof(renameBuffer) - 1);
+                            renameBuffer[sizeof(renameBuffer) - 1] = '\0';
+                            startRename = true;
+                        }
+                        if (ImGui::MenuItem("Delete")) {
+                            if (std::filesystem::exists(entry.path())) {
+                                if (selectedDir == entry.path()) {
+                                    selectedDir = entry.path().parent_path();
+                                }
+                                try {
+                                    std::filesystem::remove_all(entry.path());
+                                } catch (const std::filesystem::filesystem_error& e) {
+                                    std::cerr << "Fehler beim Löschen: " << e.what() << std::endl;
+                                }
+                            }
+                        }
+                        ImGui::EndPopup();
+                    }
                 }
-
-                DrawDirectoryContextMenu(entry.path(), false);
 
                 if (nodeOpen) {
                     DrawDirectoryTreeRecursive(entry.path());
@@ -508,6 +837,37 @@ void UI::DrawDirectoryContextMenu(const std::filesystem::path& dir, bool isRoot)
     }
 }
 
+std::string UI::GetFileIcon(const std::filesystem::path& path) {
+    if (std::filesystem::is_directory(path)) {
+        return fileIcons["folder"];
+    }
+
+    std::string ext = path.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    auto it = fileIcons.find(ext);
+    return (it != fileIcons.end()) ? it->second : fileIcons["default"];
+}
+
+std::string UI::GetFileSizeString(const std::filesystem::path& path) {
+    try {
+        if (std::filesystem::is_directory(path)) {
+            return "Folder";
+        }
+
+        auto fileSize = std::filesystem::file_size(path);
+        if (fileSize < 1024) {
+            return std::to_string(fileSize) + " B";
+        } else if (fileSize < 1024 * 1024) {
+            return std::to_string(fileSize / 1024) + " KB";
+        } else {
+            return std::to_string(fileSize / (1024 * 1024)) + " MB";
+        }
+    } catch (const std::filesystem::filesystem_error&) {
+        return "Unknown";
+    }
+}
+
 void UI::DrawStylingEditor() {
     ImGui::Begin("Styling");
 
@@ -557,9 +917,6 @@ void UI::DrawStylingEditor() {
 
     ImGui::End();
 }
-
-#include <fstream>
-#include <sstream>
 
 void UI::SaveStyle(const std::string& filename) {
     ImGuiStyle& style = ImGui::GetStyle();
