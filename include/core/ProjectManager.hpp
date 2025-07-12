@@ -36,6 +36,8 @@ public:
     // Asset-Import (kopiert Datei in Asset-Ordner, legt Metadaten an)
     void ImportAsset(const std::string& filePath, const std::string& type);
 
+    bool CreateFolder(const std::string& parentPath, const std::string& folderName);
+
     const AssetMeta* GetAssetMeta(const std::string& uuid) const;
     const std::map<std::string, AssetMeta>& GetAllAssets() const;
 

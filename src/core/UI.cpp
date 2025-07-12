@@ -6,6 +6,9 @@
 
 std::filesystem::path UI::selectedDir;
 std::string UI::selectedFile;
+static std::filesystem::path parentDirForNewFolder;
+static std::filesystem::path pathToRename;
+static char renameName[128] = "";
 
 UI::UI(Window* windowObj, GLFWwindow* window) : windowObj(windowObj), window(window) {
     IMGUI_CHECKVERSION();
@@ -128,17 +131,34 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
         if (ImGui::IsItemHovered())
             anyItemHovered = true;
 
-        if (ImGui::BeginPopupContextItem()) {
-            if (ImGui::MenuItem("Delete GameObject")) {
+        // Rechtsklick-Kontextmenü für Objekt-Löschung
+        if (ImGui::BeginPopupContextItem(("ObjectMenu" + std::to_string(i)).c_str())) {
+            if (ImGui::MenuItem("Delete")) {
                 scene.RemoveObjectAt(i);
-                if (selectedIndex >= scene.GetObjects().size())
-                    selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
-                ImGui::CloseCurrentPopup();
-                ImGui::EndPopup();
-                break;
+                if (selectedIndex >= static_cast<int>(objects.size())) {
+                    selectedIndex = static_cast<int>(objects.size()) - 1;
+                }
+                if (selectedIndex < 0) selectedIndex = 0;
             }
             ImGui::EndPopup();
         }
+    }
+    if (ImGui::BeginDragDropTarget()) {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
+            const char* modelPath = (const char*)payload->Data;
+            std::string pathStr(modelPath);
+
+            std::string projectRoot = ProjectManager::Instance().GetProjectRoot();
+            if (pathStr.find(projectRoot + "/assets/") != std::string::npos) {
+                auto modelObject = std::make_shared<Model>(pathStr);
+                scene.AddObject(modelObject);
+            } else {
+                auto modelObject = std::make_shared<Model>(pathStr);
+                scene.AddObject(modelObject);
+            }
+            selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
+        }
+        ImGui::EndDragDropTarget();
     }
 
     // Kontextmenü zum Hinzufügen neuer Objekte
@@ -165,15 +185,6 @@ void UI::DrawSceneList(Scene& scene, int& selectedIndex) {
         ImGui::EndPopup();
     }
 
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
-            const char* modelPath = (const char*)payload->Data;
-            auto modelObject = std::make_shared<Model>(modelPath);
-            scene.AddObject(modelObject);
-            selectedIndex = static_cast<int>(scene.GetObjects().size()) - 1;
-        }
-        ImGui::EndDragDropTarget();
-    }
     ImGui::End();
 }
 
@@ -226,7 +237,6 @@ void UI::DrawObjectInfo(Scene& scene, int selectedIndex, const std::vector<Mesh*
     ImGui::End();
 }
 
-// C++
 ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight, Scene& scene) {
     ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImVec2 avail = ImGui::GetContentRegionAvail();
@@ -243,104 +253,258 @@ ImVec2 UI::DrawViewport(GLuint texture, int texWidth, int texHeight, Scene& scen
     }
 
     ImVec2 cursor = ImGui::GetCursorPos();
-    ImGui::SetCursorPos(ImVec2(
+    ImVec2 centeredPos = ImVec2(
             cursor.x + (avail.x - imageSize.x) * 0.5f,
             cursor.y + (avail.y - imageSize.y) * 0.5f
-    ));
+    );
+    ImGui::SetCursorPos(centeredPos);
+
+    // Invisible Button über das gesamte Bild für Drag & Drop
+    ImGui::InvisibleButton("viewport_dragdrop", imageSize);
 
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
             const char* modelPath = (const char*)payload->Data;
-            // Modell ins Projekt importieren
-            ProjectManager::Instance().ImportAsset(modelPath, "model");
-            std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(modelPath).filename().string();
-            auto modelObject = ResourceManager::GetModel(assetPath);
+            std::string pathStr(modelPath);
+
+            // Direkt neue Model-Instanz erstellen, kein Import
+            auto modelObject = std::make_shared<Model>(pathStr);
             scene.AddObject(modelObject);
         }
         ImGui::EndDragDropTarget();
     }
 
+    // Texture über dem Button zeichnen
+    ImGui::SetCursorPos(centeredPos);
     ImGui::Image((void*)(intptr_t)texture, imageSize, ImVec2(0,1), ImVec2(1,0));
+
     ImGui::End();
     return imageSize;
 }
 
 void UI::DrawFileBrowser(Scene& scene) {
     ImGui::Begin("Content");
-    if (std::filesystem::is_directory(selectedDir)) {
-        for (const auto& entry : std::filesystem::directory_iterator(selectedDir)) {
-            if (!entry.is_directory()) {
-                if (ImGui::Selectable(entry.path().filename().string().c_str())) {
-                    UI::selectedFile = entry.path().string();
-                }
-                // Drag & Drop für .obj-Dateien
-                if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
-                    ImGui::SetDragDropPayload("MODEL_PATH", entry.path().string().c_str(), entry.path().string().size() + 1);
-                    ImGui::Text("Model: %s", entry.path().filename().string().c_str());
-                    ImGui::EndDragDropSource();
-                }
-            }
-        }
-        extern std::vector<std::string> droppedFiles;
 
-        // Drag & Drop aus Explorer
-        if (!droppedFiles.empty()) {
-            for (const auto& filePath : droppedFiles) {
-                if (std::filesystem::path(filePath).extension() == ".obj") {
-                    ProjectManager::Instance().ImportAsset(filePath, "model");
-                    selectedDir = selectedDir;
-                    // Modell als GameObject zur Szene hinzufügen
-                    std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(filePath).filename().string();
-                    auto modelObject = ResourceManager::GetModel(assetPath);
-                    scene.AddObject(modelObject);
+    try {
+        if (std::filesystem::exists(selectedDir) && std::filesystem::is_directory(selectedDir)) {
+            std::error_code ec;
+            auto dirIter = std::filesystem::directory_iterator(selectedDir, ec);
+            if (ec) {
+                ImGui::Text("Fehler beim Öffnen des Verzeichnisses: %s", ec.message().c_str());
+                ImGui::End();
+                return;
+            }
+
+            for (const auto& entry : dirIter) {
+                if (!entry.is_directory()) {
+                    if (ImGui::Selectable(entry.path().filename().string().c_str())) {
+                        UI::selectedFile = entry.path().string();
+                    }
+                    if (entry.path().extension() == ".obj" && ImGui::BeginDragDropSource()) {
+                        std::string fullPath = entry.path().string();
+                        ImGui::SetDragDropPayload("MODEL_PATH", fullPath.c_str(), fullPath.size() + 1);
+                        ImGui::Text("Model: %s", entry.path().filename().string().c_str());
+                        ImGui::EndDragDropSource();
+                    }
                 }
             }
-            droppedFiles.clear();
+        } else {
+            ImGui::Text("Ungültiges Verzeichnis: %s", selectedDir.string().c_str());
         }
-        if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_PATH")) {
-                const char* modelPath = (const char*)payload->Data;
-                ProjectManager::Instance().ImportAsset(modelPath, "model");
-                std::string assetPath = ProjectManager::Instance().GetProjectRoot() + "/assets/models/" + std::filesystem::path(modelPath).filename().string();
-                auto modelObject = ResourceManager::GetModel(assetPath);
-                scene.AddObject(modelObject);
-            }
-            ImGui::EndDragDropTarget();
-        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        ImGui::Text("Filesystem-Fehler: %s", e.what());
     }
+
+    extern std::vector<std::string> droppedFiles;
+
+    // Nur externe Dateien importieren (Drag & Drop von außerhalb)
+    if (!droppedFiles.empty()) {
+        for (const auto& filePath : droppedFiles) {
+            if (std::filesystem::path(filePath).extension() == ".obj") {
+                std::filesystem::path projectRoot = ProjectManager::Instance().GetProjectRoot();
+                std::filesystem::path assetsPath = projectRoot / "assets";
+                // Nur importieren wenn externe Datei
+                if (filePath.find(assetsPath.string()) == std::string::npos) {
+                    ProjectManager::Instance().ImportAsset(filePath, "model");
+                }
+            }
+        }
+        droppedFiles.clear();
+    }
+
     ImGui::End();
 }
 
-static std::filesystem::path selectedDir = ProjectManager::Instance().GetProjectRoot();
-
 void UI::DrawDirectoryTree() {
-    static std::filesystem::path assetsRoot = ProjectManager::Instance().GetProjectRoot() + "/assets";
+    static std::filesystem::path assetsRoot = std::filesystem::path(ProjectManager::Instance().GetProjectRoot()) / "assets";
+
+    // Falls selectedDir noch nicht initialisiert wurde
+    if (selectedDir.empty()) {
+        selectedDir = assetsRoot;
+    }
+
     ImGui::Begin("Directory");
-    ImGuiTreeNodeFlags rootFlags = (selectedDir == assetsRoot) ? ImGuiTreeNodeFlags_Selected : ImGuiTreeNodeFlags_DefaultOpen;
-    bool open = ImGui::TreeNodeEx("assets", rootFlags);
+
+    // Popup für das Umbenennen (bleibt bestehen)
+    if (ImGui::BeginPopup("RenameFolderPopup")) {
+        ImGui::Text("Rename Folder");
+        ImGui::InputText("##RenameName", renameName, sizeof(renameName));
+        if (ImGui::Button("Rename")) {
+            std::filesystem::path newPath = pathToRename.parent_path() / renameName;
+            if (!std::filesystem::exists(newPath)) {
+                std::filesystem::rename(pathToRename, newPath);
+                if (selectedDir == pathToRename) {
+                    selectedDir = newPath;
+                }
+            }
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+
+    // Root-Node
+    ImGuiTreeNodeFlags rootFlags = ImGuiTreeNodeFlags_DefaultOpen;
+    if (selectedDir == assetsRoot) {
+        rootFlags |= ImGuiTreeNodeFlags_Selected;
+    }
+    bool rootOpen = ImGui::TreeNodeEx("assets", rootFlags);
+
     if (ImGui::IsItemClicked()) {
         selectedDir = assetsRoot;
     }
-    if (open) {
+
+    // Kontextmenü für den Root-Ordner
+    if (ImGui::BeginPopupContextItem("RootContext")) {
+        if (ImGui::MenuItem("New Folder")) {
+            std::string folderName = "New Folder";
+            int counter = 1;
+            std::filesystem::path newPath = assetsRoot / folderName;
+
+            while (std::filesystem::exists(newPath)) {
+                newPath = assetsRoot / (folderName + " " + std::to_string(counter));
+                counter++;
+            }
+
+            bool success = ProjectManager::Instance().CreateFolder(assetsRoot.string(), newPath.filename().string());
+            if (!success) {
+                std::cerr << "Fehler beim Erstellen des Root-Ordners!" << std::endl;
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    // Kontextmenü für leeren Bereich im Fenster - IMMER im Root-Verzeichnis erstellen
+    if (ImGui::BeginPopupContextWindow("DirectoryWindowContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
+        if (ImGui::MenuItem("New Folder")) {
+            std::string folderName = "New Folder";
+            int counter = 1;
+            std::filesystem::path newPath = assetsRoot / folderName; // Immer assetsRoot verwenden
+
+            while (std::filesystem::exists(newPath)) {
+                newPath = assetsRoot / (folderName + " " + std::to_string(counter));
+                counter++;
+            }
+
+            bool success = ProjectManager::Instance().CreateFolder(assetsRoot.string(), newPath.filename().string());
+            if (!success) {
+                std::cerr << "Fehler beim Erstellen des Root-Ordners!" << std::endl;
+            }
+        }
+        ImGui::EndPopup();
+    }
+
+    if (rootOpen) {
         DrawDirectoryTreeRecursive(assetsRoot);
         ImGui::TreePop();
     }
+
     ImGui::End();
 }
 
 void UI::DrawDirectoryTreeRecursive(const std::filesystem::path& dir) {
-    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-        if (entry.is_directory()) {
-            ImGuiTreeNodeFlags flags = (selectedDir == entry.path()) ? ImGuiTreeNodeFlags_Selected : 0;
-            bool open = ImGui::TreeNodeEx(entry.path().filename().string().c_str(), flags);
-            if (ImGui::IsItemClicked()) {
-                selectedDir = entry.path();
-            }
-            if (open) {
-                DrawDirectoryTreeRecursive(entry.path());
-                ImGui::TreePop();
+    try {
+        // Prüfen ob das Verzeichnis existiert und zugänglich ist
+        if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+            return;
+        }
+
+        std::error_code ec;
+        auto dirIter = std::filesystem::directory_iterator(dir, ec);
+        if (ec) {
+            std::cerr << "Fehler beim Öffnen des Verzeichnisses: " << dir << " - " << ec.message() << std::endl;
+            return;
+        }
+
+        for (const auto& entry : dirIter) {
+            if (entry.is_directory()) {
+                std::string folderName = entry.path().filename().string();
+
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
+                if (selectedDir == entry.path()) {
+                    flags |= ImGuiTreeNodeFlags_Selected;
+                }
+
+                bool nodeOpen = ImGui::TreeNodeEx(folderName.c_str(), flags);
+
+                if (ImGui::IsItemClicked()) {
+                    selectedDir = entry.path();
+                }
+
+                DrawDirectoryContextMenu(entry.path(), false);
+
+                if (nodeOpen) {
+                    DrawDirectoryTreeRecursive(entry.path());
+                    ImGui::TreePop();
+                }
             }
         }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem-Fehler in DrawDirectoryTreeRecursive: " << e.what() << std::endl;
+        std::cerr << "Pfad: " << dir << std::endl;
+    }
+}
+
+void UI::DrawDirectoryContextMenu(const std::filesystem::path& dir, bool isRoot) {
+    if (!isRoot && ImGui::BeginPopupContextItem()) {
+        if (ImGui::MenuItem("New Folder")) {
+            std::string folderName = "New Folder";
+            int counter = 1;
+            std::filesystem::path newPath = dir / folderName;
+
+            while (std::filesystem::exists(newPath)) {
+                newPath = dir / (folderName + " " + std::to_string(counter));
+                counter++;
+            }
+
+            std::cout << "Kontext-Ordner erstellen:" << std::endl;
+            std::cout << "  Parent: " << dir.string() << std::endl;
+            std::cout << "  Name: " << newPath.filename().string() << std::endl;
+
+            bool success = ProjectManager::Instance().CreateFolder(dir.string(), newPath.filename().string());
+            if (!success) {
+                std::cerr << "Fehler beim Erstellen des Kontext-Ordners!" << std::endl;
+            }
+        }
+        if (ImGui::MenuItem("Rename Folder")) {
+            pathToRename = dir;
+            std::string currentName = dir.filename().string();
+            strncpy(renameName, currentName.c_str(), sizeof(renameName) - 1);
+            renameName[sizeof(renameName) - 1] = '\0';
+            ImGui::OpenPopup("RenameFolderPopup");
+        }
+        if (ImGui::MenuItem("Delete Folder")) {
+            if (std::filesystem::exists(dir)) {
+                if (selectedDir == dir) {
+                    selectedDir = dir.parent_path();
+                }
+                std::filesystem::remove_all(dir);
+            }
+        }
+        ImGui::EndPopup();
     }
 }
 

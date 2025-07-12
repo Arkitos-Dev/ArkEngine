@@ -38,6 +38,7 @@ private:
     void LoadStyle(const std::string& filename);
     void SaveStyle(const std::string& filename);
     void DrawDirectoryTreeRecursive(const std::filesystem::path& dir);
+    void DrawDirectoryContextMenu(const std::filesystem::path& dir, bool isRoot);
 
     GLFWwindow* window;
     Window* windowObj;

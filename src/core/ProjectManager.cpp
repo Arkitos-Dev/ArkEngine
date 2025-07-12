@@ -109,16 +109,25 @@ static std::string GenerateUUID() {
 void ProjectManager::ImportAsset(const std::string& filePath, const std::string& type) {
     std::string assetFolder = projectRoot + "/assets/" + type + "s";
     fs::create_directories(assetFolder);
+
     std::string filename = fs::path(filePath).filename().string();
+    std::string baseName = fs::path(filename).stem().string();
+    std::string extension = fs::path(filename).extension().string();
+
     std::string destPath = assetFolder + "/" + filename;
+
+    // Prüfe ob Datei bereits existiert und generiere neuen Namen
+    int counter = 1;
+    while (fs::exists(destPath)) {
+        std::string newFilename = baseName + "_" + std::to_string(counter) + extension;
+        destPath = assetFolder + "/" + newFilename;
+        filename = newFilename;
+        counter++;
+    }
+
     try {
-        if (fs::exists(destPath)) {
-            // Optional: Datei vorher löschen
-            fs::remove(destPath);
-        }
-        fs::copy_file(filePath, destPath, fs::copy_options::overwrite_existing);
+        fs::copy_file(filePath, destPath);
     } catch (const fs::filesystem_error& e) {
-        // Fehler ausgeben, aber nicht crashen
         std::cerr << "ImportAsset Fehler: " << e.what() << std::endl;
         return;
     }
@@ -130,6 +139,39 @@ void ProjectManager::ImportAsset(const std::string& filePath, const std::string&
     meta.type = type;
     meta.importDate = std::to_string(std::time(nullptr));
     assets[meta.uuid] = meta;
+}
+
+bool ProjectManager::CreateFolder(const std::string& parentPath, const std::string& folderName) {
+    std::filesystem::path newFolderPath = std::filesystem::path(parentPath) / folderName;
+
+    // Prüfen ob Ordner bereits existiert
+    if (std::filesystem::exists(newFolderPath)) {
+        std::cerr << "Ordner existiert bereits: " << newFolderPath << std::endl;
+        return false;
+    }
+
+    try {
+        // Stelle sicher, dass der Parent-Pfad existiert
+        if (!std::filesystem::exists(parentPath)) {
+            std::cerr << "Parent-Pfad existiert nicht: " << parentPath << std::endl;
+            return false;
+        }
+
+        // Erstelle den Ordner
+        bool success = std::filesystem::create_directory(newFolderPath);
+
+        if (success) {
+            std::cout << "Ordner erfolgreich erstellt: " << newFolderPath << std::endl;
+        } else {
+            std::cerr << "Fehler beim Erstellen des Ordners: " << newFolderPath << std::endl;
+        }
+
+        return success;
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Filesystem-Fehler beim Erstellen des Ordners: " << e.what() << std::endl;
+        std::cerr << "Pfad: " << newFolderPath << std::endl;
+        return false;
+    }
 }
 
 const AssetMeta* ProjectManager::GetAssetMeta(const std::string& uuid) const {

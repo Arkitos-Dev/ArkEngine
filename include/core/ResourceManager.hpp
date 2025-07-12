@@ -21,8 +21,10 @@ public:
     static std::shared_ptr<Model> GetModel(const std::string& path);
     static void ClearModels();
 
+
 private:
     static std::map<std::string, unsigned int> textures;
     static std::map<std::string, std::shared_ptr<Shader>> shaders;
     static std::map<std::string, std::shared_ptr<Model>> models;
+
 };
