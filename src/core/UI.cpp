@@ -458,7 +458,8 @@ void UI::DrawBreadcrumbs() {
         ImGui::SameLine();
 
         currentPath /= part;
-        if (ImGui::Button(part.string().c_str())) {
+        std::string buttonLabel = part.string() + "##" + currentPath.string();
+        if (ImGui::Button(buttonLabel.c_str())) {
             selectedDir = currentPath;
         }
     }

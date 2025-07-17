@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 # Enable FetchContent
 include(FetchContent)
 
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+
 # Fetch GLFW
 FetchContent_Declare(
         glfw

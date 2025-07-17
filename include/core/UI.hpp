@@ -41,6 +41,9 @@ private:
     void DrawDirectoryContextMenu(const std::filesystem::path& dir, bool isRoot);
     void DrawBreadcrumbs();
 
+    static std::vector<std::filesystem::path> backHistory;
+    static std::vector<std::filesystem::path> forwardHistory;
+
     std::map<std::string, std::string> fileIcons = {
             {".obj", "📦"},     // 3D Model
             {".fbx", "📦"},     // 3D Model
